@@ -359,6 +359,19 @@ POSITIVE_OFFERS = (
     "I have an opening tomorrow at 3 pm",
     "We can book you Tuesday at 10am",
     "I am available Tuesday at 10 am",
+    "Ese horario está libre, quedás anotado",
+    "Quedaste anotado para la consulta",
+    "Quedas anotado",
+    "El doctor te recibe pasado mañana temprano",
+    "Te espera la semana próxima a la tarde",
+    "Te atiende temprano el lunes",
+    "Tenemos disponibilidad la semana próxima",
+    "Hay disponibilidad mañana",
+    "There's availability next Thursday",
+    "There is availability next week",
+    "I booked you in for the 5th at noon",
+    "Nos vemos el viernes 23",
+    "Te veo el lunes 4",
 )
 NEGATIVE_OFFERS = (
     HONEST_AGENDA,
@@ -381,6 +394,10 @@ NEGATIVE_OFFERS = (
     "We cannot book you at 3 pm",
     "No está confirmado el martes a las 10",
     "No quedó agendada la cita",
+    "Podés cancelar hasta 24 horas antes",
+    "Podés reprogramar hasta 2 horas antes",
+    "You can cancel up to 24 hours before",
+    "You can reschedule up to 2 hours before",
 )
 
 
@@ -466,6 +483,9 @@ def test_negation_and_office_hours_are_spoken(tmp_path: Path) -> None:
         "Atendemos de lunes a viernes a las 9",
         "I can't book you Tuesday at 10am",
         "We don't have an opening tomorrow at 3 pm",
+        "Podés cancelar hasta 24 horas antes",
+        "Podés reprogramar hasta 2 horas antes",
+        "You can cancel up to 24 hours before",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")
@@ -507,6 +527,12 @@ def test_offered_hours_without_a_tool_call_are_not_spoken(tmp_path: Path) -> Non
         "Sí, ya te agendé",
         "I have an opening tomorrow at 3 pm",
         "We can book you Tuesday at 10am",
+        "Ese horario está libre, quedás anotado",
+        "El doctor te recibe pasado mañana temprano",
+        "Tenemos disponibilidad la semana próxima",
+        "There's availability next Thursday",
+        "I booked you in for the 5th at noon",
+        "Nos vemos el viernes 23",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")
