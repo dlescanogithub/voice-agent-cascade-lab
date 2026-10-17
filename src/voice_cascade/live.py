@@ -77,7 +77,13 @@ _NEGATION = re.compile(
     r"\bhaven't scheduled\b|\bhave not scheduled\b|\bnot scheduled you\b|"
     r"\bno free slot\b|\bnot a free slot\b|\bisn't a free slot\b|\bis not a free slot\b|"
     r"\bnot put you down\b|\bdidn't put you down\b|\bdid not put you down\b|"
-    r"\bhaven't put you down\b|\bhave not put you down\b"
+    r"\bhaven't put you down\b|\bhave not put you down\b|"
+    r"\bno reserv\w*\b|"
+    r"\bnot confirmed\b|"
+    r"\bdidn't schedule\b|\bdid not schedule\b|\bnot schedule\b|"
+    r"\bnot holding a spot\b|\baren't holding a spot\b|\bare not holding a spot\b|"
+    r"\bnot reserved\b|\bhaven't reserved\b|\bhave not reserved\b|"
+    r"\bdidn't reserve\b|\bdid not reserve\b"
 )
 _SLOT_WHEN = re.compile(
     r"\b(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo|hoy|manana)\b|"
@@ -95,7 +101,8 @@ _MEDICAL_DURATION = re.compile(
     r"|\bayunar\b.{0,40}?\b\d{1,2}\s+horas?\b"
     r"|\bayune\b.{0,40}?\b\d{1,2}\s+horas?\b"
     r"|\ben ayunas\b.{0,40}?\b\d{1,2}\s+horas?\b"
-    r"|\breposo(?:\s+de)?\s+\d{1,2}\s+horas?\b"
+    r"|\breposo(?:\s+absoluto)?(?:\s+(?:por|de|durante))?\s+\d{1,2}\s+horas?\b"
+    r"|\b\d{1,2}\s+horas?\s+de\s+reposo\b"
     r"|\bdura\s+\d{1,2}\s+horas?\b"
     r"|\bfast(?:ing)?\b.{0,40}?\b\d{1,2}\s+hours?\b"
     r"|\b\d{1,2}\s*-?\s*hours?\s+fast\b"
@@ -407,19 +414,23 @@ def unsupported_availability_claim(text: str, *, calendar_tool_called: bool) -> 
     or English ("opening", "book you", "there's availability", "I booked you in",
     "for the 5th", "at 3 pm", "appointment open", "slots are available on the 12th",
     "I've scheduled you", "Tuesday afternoon is open", "we can see you" with a day,
-    "free slot" with a day, "put you down", "opening" with an ordinal or "half past").
-    Also "hueco"/"cupo", "te puedo meter", "te confirmo el turno", "está libre" next
-    to a day, and "quedaste con" next to a day. A weekday counts with an offer verb.
-    A negation, a cancellation policy ("hasta 24 horas antes"), a general office range,
-    or a medical duration ("ayuno de 8 horas", "dura 8 horas", "8 hour fast") suppresses
+    "free slot" with a day, "put you down", "opening" with an ordinal or "half past",
+    "fit you in" with a day or "noon", "appointment is confirmed" with a date,
+    "scheduled your", "holding a spot for you", "I've reserved"). Also "hueco"/"cupo",
+    "te puedo meter", "te confirmo el turno", "está libre" next to a day, "quedaste con"
+    next to a day, and "reservé"/"reservaste" next to a day or "cita". A weekday counts
+    with an offer verb. A negation, a cancellation policy ("hasta 24 horas antes"), a
+    general office range, or a medical duration ("ayuno de 8 horas", "reposo por 24
+    horas", "reposo absoluto por 24 horas", "dura 8 horas", "8 hour fast") suppresses
     the claim. "las 15 horas" is still a clock time. Both misses and false hits are
     possible. Handwritten samples on 2026-10-17, each n=20 and separate from these
     tests: set 1 caught 11 of 20 (about 55%, about ±22 points) with 0 of 20 false
-    positives; set 2, scored on the heuristic after 0.1.6, caught 15 of 20 (75%) with
-    1 of 20 false positives. Different lists and overlapping intervals: not an
-    improvement. An earlier set, before pull request 7, caught 14 of 20. Recall after
-    the patterns in this release is not measured yet. This does not replace a human
-    read of the transcript.
+    positives; set 2, scored after 0.1.6, caught 15 of 20 (75%) with 1 of 20 false
+    positives; set 3, scored on the 0.1.7 heuristic, caught 14 of 20 (70%) with 1 of
+    20 false positives. Different lists and overlapping intervals: not an improvement.
+    An earlier set, before pull request 7, caught 14 of 20. Recall after the patterns
+    in this release is not measured yet. This does not replace a human read of the
+    transcript.
     """
 
     if calendar_tool_called:
@@ -492,6 +503,26 @@ def _english_slot(folded: str) -> bool:
         r"\b\d{1,2}(?:st|nd|rd|th)\b|\bhalf past\b", folded
     ):
         return True
+    if re.search(r"\bfit you in\b", folded) and (
+        _EN_DAY.search(folded) is not None
+        or re.search(r"\b(?:noon|morning|afternoon|evening)\b", folded) is not None
+    ):
+        return True
+    if (
+        re.search(r"\bappointment\b", folded)
+        and re.search(r"\bconfirmed\b", folded)
+        and (
+            _EN_DAY.search(folded) is not None
+            or re.search(r"\b\d{1,2}(?:st|nd|rd|th)\b", folded) is not None
+        )
+    ):
+        return True
+    if re.search(r"\bscheduled your\b", folded):
+        return True
+    if re.search(r"\bhold(?:ing)? a spot for you\b", folded):
+        return True
+    if re.search(r"\b(?:i've|i have|we've|we have) reserved\b", folded):
+        return True
     return _EN_OFFER.search(folded) is not None and _EN_DAY.search(folded) is not None
 
 
@@ -505,6 +536,10 @@ def _soft_booking(folded: str) -> bool:
     if re.search(r"\bdisponibilidad\b", folded) and _WHEN.search(folded):
         return True
     if re.search(r"\bquedaste con\b", folded) and _SLOT_WHEN.search(folded):
+        return True
+    if re.search(r"\breserv(?:e|aste|amos)\b", folded) and (
+        _SLOT_WHEN.search(folded) is not None or re.search(r"\bcita\b", folded) is not None
+    ):
         return True
     if re.search(r"\b(?:hueco|cupo)\b", folded) and _SLOT_WHEN.search(folded):
         return True

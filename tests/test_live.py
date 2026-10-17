@@ -391,6 +391,14 @@ POSITIVE_OFFERS = (
     "I've put you down for Wednesday at 9",
     "Our next opening is the 21st at half past two",
     "El estudio requiere ayuno de 8 horas, y te puedo ofrecer las 15 horas",
+    "Reservé tu cita de control para el sábado por la mañana",
+    "Reservaste la cita para el lunes",
+    "I can fit you in tomorrow around noon",
+    "Your appointment is confirmed for November 5th",
+    "I scheduled your check-up for Friday at 2",
+    "We're holding a spot for you on Tuesday at 11",
+    "Sure, I've reserved 3 o'clock on Thursday for you",
+    "Te puedo ofrecer las 15 horas. Guardá reposo por 24 horas",
 )
 NEGATIVE_OFFERS = (
     HONEST_AGENDA,
@@ -456,6 +464,27 @@ NEGATIVE_OFFERS = (
     "Our next opening is in the spring",
     "We don't have a next opening on the 21st",
     "Podés reprogramar el turno hasta 24 horas antes",
+    "guardá reposo por 24 horas",
+    "Guardá reposo",
+    "reposo absoluto por 24 horas",
+    "Reposo absoluto por 48 horas",
+    "Guardá reposo durante 12 horas",
+    "Indicación: 24 horas de reposo",
+    "Please reserve judgment",
+    "No reservé tu cita de control",
+    "I cannot fit you in tomorrow around noon",
+    "I can fit you in the waiting room",
+    "Lunch is around noon",
+    "Your appointment is not confirmed for November 5th",
+    "Your appointment may be confirmed",
+    "November 5th is a public holiday",
+    "I did not schedule your check-up for Friday",
+    "We're not holding a spot for you on Tuesday",
+    "Holding a spot in the parking lot",
+    "The conference room is reserved for Thursday",
+    "I have not reserved a time on Thursday",
+    "Lunch is at 3 o'clock",
+    "El estudio requiere ayuno de 8 horas y guardá reposo por 24 horas",
 )
 
 
@@ -556,6 +585,15 @@ def test_negation_and_office_hours_are_spoken(tmp_path: Path) -> None:
         "There is no free slot on Friday morning",
         "I have not put you down for Wednesday",
         "Podés reprogramar el turno hasta 24 horas antes",
+        "guardá reposo por 24 horas",
+        "Reposo absoluto por 48 horas",
+        "El estudio requiere ayuno de 8 horas y guardá reposo por 24 horas",
+        "No reservé tu cita de control",
+        "I cannot fit you in tomorrow around noon",
+        "Your appointment is not confirmed for November 5th",
+        "I did not schedule your check-up for Friday",
+        "We're not holding a spot for you on Tuesday",
+        "I have not reserved a time on Thursday",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")
@@ -617,6 +655,12 @@ def test_offered_hours_without_a_tool_call_are_not_spoken(tmp_path: Path) -> Non
         "There's a free slot on Friday morning",
         "I've put you down for Wednesday at 9",
         "Our next opening is the 21st at half past two",
+        "Reservé tu cita de control para el sábado por la mañana",
+        "I can fit you in tomorrow around noon",
+        "Your appointment is confirmed for November 5th",
+        "I scheduled your check-up for Friday at 2",
+        "We're holding a spot for you on Tuesday at 11",
+        "Sure, I've reserved 3 o'clock on Thursday for you",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")

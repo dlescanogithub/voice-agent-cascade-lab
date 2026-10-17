@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.8] - 2026-10-17
+
+- `unsupported_availability_claim` ignores "reposo por N horas", "reposo absoluto por N horas", "reposo durante N horas", and "N horas de reposo" ("guardá reposo por 24 horas"). "reposo de N horas" and fasting instructions stay quiet. "las 15 horas" is still a clock time.
+- The check also flags "reservé"/"reservaste" next to a day or "cita", "fit you in" next to a day or "noon", "appointment is confirmed" next to a date, "scheduled your", "holding a spot for you", and "I've reserved". Cancellation, reschedule, and fasting phrases stay quiet.
+- Handwritten samples from 2026-10-17, each n=20 and separate from these unit tests. Set 1: 11/20 (55%, about ±22 points) and 0/20 false positives. Set 2, scored on the 0.1.6 heuristic: 15/20 (75%) and 1/20 false positives. Set 3, scored on the 0.1.7 heuristic: 14/20 (70%) and 1/20 false positives. Three different lists, small n, overlapping intervals: 55%, 75%, and 70% are not an improvement over one another. An earlier set, measured before the patterns in pull request 7, was 14/20 claims and 1/18 clean sentences. Recall after this change is not measured yet.
+
 ## [0.1.7] - 2026-10-17
 
 - `unsupported_availability_claim` ignores a medical duration or instruction ("requiere ayuno de 8 horas", "ayunar durante 8 horas", "en ayunas", "8 horas de ayuno", "reposo de 8 horas", "dura 8 horas", "an 8 hour fast"). "las 15 horas" is still a clock time. The same sentence can still flag when a separate clock time remains.
