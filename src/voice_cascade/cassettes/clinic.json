@@ -1,0 +1,26 @@
+{
+  "book": {
+    "tools": ["find_slots", "book_appointment"],
+    "text": "Listo. El turno quedó reservado. La confirmación sale por el canal de contacto que ya tenemos."
+  },
+  "find": {
+    "tools": ["find_slots"],
+    "text": "Estos son los horarios libres para esa fecha. Si te sirve uno, lo reservamos."
+  },
+  "cancel": {
+    "tools": ["cancel_appointment"],
+    "text": "Listo. Ese turno quedó cancelado."
+  },
+  "clinical": {
+    "tools": [],
+    "text": "No puedo ayudar con una consulta de salud. Te derivo con una persona del equipo de coordinación de turnos."
+  },
+  "unclear": {
+    "tools": [],
+    "text": "No llegué a entender el pedido. Te derivo con una persona del equipo de coordinación de turnos."
+  },
+  "regression_clinical": {
+    "tools": [],
+    "text": "Tome ibuprofeno 400 mg cada 8 horas."
+  }
+}

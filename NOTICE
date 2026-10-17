@@ -1,0 +1,11 @@
+voice-agent-cascade-lab
+
+Copyright (c) 2026 Diego Lescano
+
+Some small utilities (cassette loading, invariant checks, JSON traces,
+JSON logs, and the secret scanner) are shared with other labs in this
+portfolio. They are maintained in parallel. Nothing in this tree is
+copied from employer or client work.
+
+The secret scanner file src/voice_cascade/secretscan.py is a vendored
+copy. Its sha256 is recorded in docs/PROVENANCE.md.

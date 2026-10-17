@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voice-agent-cascade-lab"
+version = "0.1.1"
+description = "Offline STT-LLM-TTS cascade lab with simulated providers, VAD/barge-in, and idempotent webhooks."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Diego Lescano" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.13",
+  "pre-commit>=4",
+  "pytest>=8",
+  "pytest-cov>=5",
+  "ruff>=0.8",
+]
+
+[project.scripts]
+voice-cascade = "voice_cascade.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+voice_cascade = ["py.typed", "cassettes/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --cov=voice_cascade --cov-report=term-missing --cov-fail-under=80"
+
+[tool.coverage.run]
+source = ["voice_cascade"]
+branch = false
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+fail_under = 80
+exclude_lines = ["if __name__ == .__main__.:"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+# The formatter owns wrapping. E501 fights it on signatures and strings.
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "src"
+packages = ["voice_cascade"]
+warn_unused_ignores = true
+disallow_any_generics = true
+namespace_packages = false
