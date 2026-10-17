@@ -174,13 +174,26 @@ def cmd_live(settings: Settings) -> int:
     turns = payload.get("turns")
     count = len(turns) if isinstance(turns, list) else 0
     print(
-        "Measured with real providers "
+        f"{payload.get('title', 'live')} "
         f"turns={count} estimated_usd={payload.get('estimated_usd')} "
         f"price_date={payload.get('price_date')}"
     )
+    invariants = payload.get("invariants")
+    passed = True
+    if isinstance(invariants, dict):
+        passed = invariants.get("passed") is True
+        raw_failures = invariants.get("failures")
+        if isinstance(raw_failures, list):
+            for item in raw_failures:
+                print(f"failure: {item}")
+    latency = payload.get("latency")
+    if isinstance(latency, dict):
+        e2e = latency.get("e2e_real_only")
+        if isinstance(e2e, dict) and isinstance(e2e.get("warning"), str):
+            print(f"warning: {e2e['warning']}")
     print(f"wrote {Path(settings.data_dir) / 'live' / 'results.json'}")
     print("README table 'Measured with real providers' is not updated by this command.")
-    return 0
+    return 0 if passed else 1
 
 
 def cmd_secretscan(root: Path) -> int:

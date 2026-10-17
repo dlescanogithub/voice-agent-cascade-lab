@@ -16,23 +16,40 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol, cast
+from urllib.parse import urlparse
 
 from voice_cascade.llm import SAFE_CLINICAL, contains_clinical_advice
+from voice_cascade.metrics import percentile
+from voice_cascade.stt import fold
 
 RETRY_STATUSES = frozenset({429, 500, 502, 503})
 CHARS_PER_TOKEN_DEFAULT = 4  # [EST]
+PERCENTILE_MIN_N = 20
+USD_TICKS = 1e-10
+LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "0.0.0.0"})
+_CLOCK_TIME = re.compile(r"\b(?:[01]?\d|2[0-3])[:.][0-5]\d\b")
 
 SYSTEM_PROMPT = (
     "Sos el coordinador de turnos de Clínica Aurora. "
     "Solo hablás de reservas, horarios y cancelaciones. "
-    "No des consejos de salud. No confirmes una reserva: este modo no escribe la agenda."
+    "No des consejos de salud. "
+    "No tenés acceso a la agenda y este modo no escribe turnos. "
+    "No inventes horarios, turnos ni disponibilidad. "
+    "Si te preguntan qué horarios hay, decí que no podés ver la agenda. "
+    "No confirmes una reserva."
+)
+SAFE_NO_AGENDA = "No puedo ver la agenda. No tengo acceso a los horarios."
+UNCACHED_ESTIMATE_NOTE = (
+    "The token estimate prices every input token at the uncached rate. "
+    "Cached tokens are ignored because the response did not report them."
 )
 
 
@@ -75,6 +92,13 @@ class LiveConfig:
     tts_voice_id: str
     tts_model_id: str
     tts_usd_per_1k_chars: float
+    stt_source: str
+    llm_source: str
+    tts_source: str
+    stt_provider: str
+    llm_provider: str
+    tts_provider: str
+    llm_usd_per_1k_cached: float | None = None
     chars_per_token: int = CHARS_PER_TOKEN_DEFAULT
     max_attempts: int = 3
     backoff_base_ms: int = 200
@@ -133,6 +157,22 @@ class LiveConfig:
                 tts_usd_per_1k_chars=_positive_float(
                     env, "LIVE_TTS_USD_PER_1K_CHARS", allow_zero=True
                 ),
+                stt_source=_stage_source(env, "LIVE_STT_SOURCE", env["LIVE_STT_URL"].strip()),
+                llm_source=_stage_source(env, "LIVE_LLM_SOURCE", env["LIVE_LLM_BASE_URL"].strip()),
+                tts_source=_stage_source(env, "LIVE_TTS_SOURCE", env["LIVE_TTS_BASE_URL"].strip()),
+                stt_provider=_provider_label(
+                    env, "LIVE_STT_PROVIDER", env["LIVE_STT_URL"].strip(), "LIVE_STT_SOURCE"
+                ),
+                llm_provider=_provider_label(
+                    env,
+                    "LIVE_LLM_PROVIDER",
+                    env["LIVE_LLM_BASE_URL"].strip(),
+                    "LIVE_LLM_SOURCE",
+                ),
+                tts_provider=_provider_label(
+                    env, "LIVE_TTS_PROVIDER", env["LIVE_TTS_BASE_URL"].strip(), "LIVE_TTS_SOURCE"
+                ),
+                llm_usd_per_1k_cached=_optional_price(env, "LIVE_LLM_USD_PER_1K_CACHED_TOKENS"),
                 chars_per_token=_optional_int(env, "LIVE_CHARS_PER_TOKEN", CHARS_PER_TOKEN_DEFAULT),
                 max_attempts=_optional_int(env, "LIVE_MAX_ATTEMPTS", 3),
                 backoff_base_ms=_optional_int(env, "LIVE_BACKOFF_BASE_MS", 200),
@@ -195,6 +235,101 @@ def _optional_float(env: Mapping[str, str], name: str, default: float) -> float:
         return float(raw)
     except ValueError as exc:
         raise ValueError(f"{name} is not a number") from exc
+
+
+def _optional_price(env: Mapping[str, str], name: str) -> float | None:
+    raw = env.get(name, "").strip()
+    if raw == "":
+        return None
+    try:
+        value = float(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name} is not a number") from exc
+    if value < 0:
+        raise ValueError(f"{name} must be >= 0")
+    return value
+
+
+def _stage_source(env: Mapping[str, str], name: str, url: str) -> str:
+    raw = env.get(name, "").strip().lower()
+    if raw in {"real", "stub"}:
+        return raw
+    if raw not in {"", "auto"}:
+        raise ValueError(f"{name} must be real, stub, or empty")
+    host = (urlparse(url).hostname or "").lower()
+    if host in LOOPBACK_HOSTS or host.endswith(".localhost"):
+        return "stub"
+    return "real"
+
+
+def _provider_label(env: Mapping[str, str], provider_env: str, url: str, source_env: str) -> str:
+    label = env.get(provider_env, "").strip()
+    if label:
+        return label
+    source = _stage_source(env, source_env, url)
+    host = (urlparse(url).hostname or "").lower()
+    if source == "stub" and host in LOOPBACK_HOSTS:
+        return "local-stub"
+    return host or "unknown"
+
+
+def public_endpoint(url: str) -> str:
+    """Endpoint without userinfo, query, or fragment. Never includes a key."""
+
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    port = f":{parsed.port}" if parsed.port else ""
+    path = parsed.path or ""
+    return f"{parsed.scheme}://{host}{port}{path}"
+
+
+def report_title(stt_source: str, llm_source: str, tts_source: str) -> str:
+    sources = (("STT", stt_source), ("LLM", llm_source), ("TTS", tts_source))
+    if all(source == "real" for _, source in sources):
+        return "Measured with real providers"
+    real = [name for name, source in sources if source == "real"]
+    stub = [name for name, source in sources if source != "real"]
+    parts: list[str] = []
+    if real:
+        parts.append(f"{'/'.join(real)} real")
+    if stub:
+        parts.append(f"{'/'.join(stub)} stub")
+    return "Partially measured: " + ", ".join(parts)
+
+
+def unsupported_availability_claim(text: str, *, has_calendar_tool: bool) -> bool:
+    """True when a reply states concrete slots and no calendar tool was available."""
+
+    if has_calendar_tool:
+        return False
+    folded = fold(text)
+    if "tengo disponible" in folded:
+        return True
+    return _CLOCK_TIME.search(text) is not None or _CLOCK_TIME.search(folded) is not None
+
+
+def summarize_ms(values: list[float], *, allow_percentiles: bool) -> dict[str, object]:
+    if not values:
+        return {"n": 0, "warning": "no samples"}
+    summary: dict[str, object] = {
+        "n": len(values),
+        "min_ms": min(values),
+        "max_ms": max(values),
+    }
+    if not allow_percentiles:
+        summary["warning"] = (
+            "stub timings are excluded from end-to-end and are not reported as p50/p95."
+        )
+        return summary
+    if len(values) < PERCENTILE_MIN_N:
+        summary["warning"] = (
+            f"n={len(values)} is below {PERCENTILE_MIN_N}; p50 and p95 are not reported."
+        )
+        return summary
+    ints = [round(value) for value in values]
+    summary["p50_ms"] = percentile(ints, 50)
+    summary["p95_ms"] = percentile(ints, 95)
+    return summary
 
 
 def estimate_usd(config: LiveConfig, turns: tuple[LiveTurn, ...] = LIVE_TURNS) -> float:
@@ -415,18 +550,110 @@ def _object(body: bytes) -> dict[str, object]:
     return {str(key): value for key, value in parsed.items()}
 
 
-def _stage_record(exchange: HttpExchange) -> dict[str, object]:
+def _stage_record(
+    exchange: HttpExchange,
+    *,
+    source: str,
+    provider: str,
+    endpoint: str,
+) -> dict[str, object]:
     return {
+        "source": source,
+        "simulated": source != "real",
+        "provider": provider,
+        "endpoint": endpoint,
         "status": exchange.status,
         "ttfb_ms": round(exchange.ttfb_s * 1000.0, 3),
         "total_ms": round(exchange.total_s * 1000.0, 3),
+        "included_in_e2e": source == "real",
     }
 
 
-def _speakable(model_text: str) -> str:
+def _as_int(value: object) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    return int(value)
+
+
+def _usage_from_body(payload: Mapping[str, object]) -> dict[str, object]:
+    raw = payload.get("usage")
+    if not isinstance(raw, dict):
+        return {
+            "input_tokens": None,
+            "output_tokens": None,
+            "cached_tokens": None,
+            "cached_tokens_reported": False,
+            "provider_cost_usd": None,
+            "estimate_note": UNCACHED_ESTIMATE_NOTE,
+        }
+    cached: int | None = None
+    cached_reported = False
+    details = raw.get("prompt_tokens_details")
+    if isinstance(details, dict) and "cached_tokens" in details:
+        cached = _as_int(details.get("cached_tokens"))
+        cached_reported = True
+    elif "cached_tokens" in raw:
+        cached = _as_int(raw.get("cached_tokens"))
+        cached_reported = True
+    provider_cost: float | None = None
+    ticks = raw.get("cost_in_usd_ticks")
+    if isinstance(ticks, int | float) and not isinstance(ticks, bool):
+        provider_cost = float(ticks) * USD_TICKS
+    elif isinstance(raw.get("cost"), int | float) and not isinstance(raw.get("cost"), bool):
+        provider_cost = float(cast(int | float, raw.get("cost")))
+    return {
+        "input_tokens": _as_int(raw.get("prompt_tokens")),
+        "output_tokens": _as_int(raw.get("completion_tokens")),
+        "cached_tokens": cached,
+        "cached_tokens_reported": cached_reported,
+        "provider_cost_usd": provider_cost,
+        "estimate_note": UNCACHED_ESTIMATE_NOTE,
+    }
+
+
+def token_estimate_usd(
+    config: LiveConfig,
+    usage: Mapping[str, object],
+) -> tuple[float | None, str]:
+    """Price reported tokens. Cached tokens are priced only when the response has them."""
+
+    input_tokens = usage.get("input_tokens")
+    output_tokens = usage.get("output_tokens")
+    if not isinstance(input_tokens, int) or not isinstance(output_tokens, int):
+        return None, "No token estimate: the response did not report input and output tokens."
+    cached = usage.get("cached_tokens")
+    cached_reported = usage.get("cached_tokens_reported") is True and isinstance(cached, int)
+    if not cached_reported:
+        estimate = (input_tokens / 1000.0) * config.llm_usd_per_1k_input
+        estimate += (output_tokens / 1000.0) * config.llm_usd_per_1k_output
+        return estimate, UNCACHED_ESTIMATE_NOTE
+    assert isinstance(cached, int)
+    if config.llm_usd_per_1k_cached is None:
+        estimate = (input_tokens / 1000.0) * config.llm_usd_per_1k_input
+        estimate += (output_tokens / 1000.0) * config.llm_usd_per_1k_output
+        return estimate, (
+            "Cached tokens were reported but LIVE_LLM_USD_PER_1K_CACHED_TOKENS is unset, "
+            "so the estimate still prices every input token at the uncached rate."
+        )
+    billable = max(0, input_tokens - cached)
+    estimate = (billable / 1000.0) * config.llm_usd_per_1k_input
+    estimate += (cached / 1000.0) * config.llm_usd_per_1k_cached
+    estimate += (output_tokens / 1000.0) * config.llm_usd_per_1k_output
+    return estimate, (
+        "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. "
+        "Uncached input tokens use the input price."
+    )
+
+
+def _spoken_text(model_text: str) -> tuple[str, bool, bool]:
+    """Return text to synthesize, whether the clinical guard fired, and the slot invariant."""
+
+    availability = unsupported_availability_claim(model_text, has_calendar_tool=False)
     if contains_clinical_advice(model_text):
-        return SAFE_CLINICAL
-    return model_text
+        return SAFE_CLINICAL, True, availability
+    if availability:
+        return SAFE_NO_AGENDA, False, True
+    return model_text, False, False
 
 
 def run_turn(
@@ -481,8 +708,13 @@ def run_turn(
     )
     if llm.status != 200:
         raise LiveRequestError(f"{turn.turn_id} language call status {llm.status}")
-    reply = _message_text(_object(llm.body))
-    spoken = _speakable(reply)
+    llm_payload = _object(llm.body)
+    reply = _message_text(llm_payload)
+    usage = _usage_from_body(llm_payload)
+    token_usd, estimate_note = token_estimate_usd(config, usage)
+    usage["token_estimate_usd"] = None if token_usd is None else round(token_usd, 8)
+    usage["estimate_note"] = estimate_note
+    spoken, clinical_replaced, availability_claim = _spoken_text(reply)
     tts_request = HttpRequest(
         "POST",
         _join(config.tts_base_url, f"v1/text-to-speech/{config.tts_voice_id}"),
@@ -499,14 +731,52 @@ def run_turn(
     )
     if tts.status != 200 or tts.body == b"":
         raise LiveRequestError(f"{turn.turn_id} synthesis call status {tts.status}")
+    llm_stage = _stage_record(
+        llm,
+        source=config.llm_source,
+        provider=config.llm_provider,
+        endpoint=public_endpoint(_join(config.llm_base_url, "chat/completions")),
+    )
+    llm_stage["usage"] = usage
     record: dict[str, object] = {
         "id": turn.turn_id,
-        "stt": _stage_record(stt),
-        "llm": _stage_record(llm),
-        "tts": _stage_record(tts),
-        "clinical_guard_replaced": spoken != reply,
+        "stt": _stage_record(
+            stt,
+            source=config.stt_source,
+            provider=config.stt_provider,
+            endpoint=public_endpoint(config.stt_url),
+        ),
+        "llm": llm_stage,
+        "tts": _stage_record(
+            tts,
+            source=config.tts_source,
+            provider=config.tts_provider,
+            endpoint=public_endpoint(
+                _join(config.tts_base_url, f"v1/text-to-speech/{config.tts_voice_id}")
+            ),
+        ),
+        "vad": _unmeasured("vad"),
+        "tool": _unmeasured("tool"),
+        "clinical_guard_replaced": clinical_replaced,
+        "unsupported_availability_claim": availability_claim,
     }
     return record, tts.body
+
+
+def _unmeasured(stage: str) -> dict[str, object]:
+    note = (
+        "Live mode does not run turn-taking."
+        if stage == "vad"
+        else "Live mode has no calendar tool."
+    )
+    return {
+        "source": "stub",
+        "simulated": True,
+        "provider": "not-run",
+        "endpoint": "",
+        "included_in_e2e": False,
+        "note": note,
+    }
 
 
 def _message_text(payload: Mapping[str, object]) -> str:
@@ -552,22 +822,173 @@ def run_live(
             (audio_dir / f"{turn.turn_id}.bin").write_bytes(audio)
             rows.append(record)
     finally:
-        payload: dict[str, object] = {
-            "title": "Measured with real providers",
-            "simulated": False,
-            "price_date": config.price_date,
-            "estimated_usd": round(estimate, 6),
-            "max_spend_usd": config.max_spend_usd,
-            "chars_per_token_est": config.chars_per_token,
-            "turns": rows,
-            "complete": len(rows) == len(turns),
-        }
+        payload = _report(config, rows, turns, estimate)
         (output_dir / "results.json").write_text(
             json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
     if len(rows) != len(turns):
         raise LiveRequestError("live run incomplete")
     return payload
+
+
+def _report(
+    config: LiveConfig,
+    rows: list[dict[str, object]],
+    turns: tuple[LiveTurn, ...],
+    precall_estimate: float,
+) -> dict[str, object]:
+    failures = [
+        f"unsupported_availability_claim:{row.get('id')}"
+        for row in rows
+        if row.get("unsupported_availability_claim") is True
+    ]
+    e2e: list[float] = []
+    by_stage: dict[str, list[float]] = {"stt": [], "llm": [], "tts": []}
+    for row in rows:
+        real_total = 0.0
+        any_real = False
+        for name in ("stt", "llm", "tts"):
+            stage = row.get(name)
+            if not isinstance(stage, dict):
+                continue
+            total = stage.get("total_ms")
+            if not isinstance(total, int | float):
+                continue
+            by_stage[name].append(float(total))
+            if stage.get("included_in_e2e") is True:
+                real_total += float(total)
+                any_real = True
+        if any_real:
+            e2e.append(real_total)
+    rolled = _rollup_usage(rows)
+    input_tokens = rolled.input_tokens
+    output_tokens = rolled.output_tokens
+    cached_tokens = rolled.cached_tokens
+    cached_reported = rolled.cached_tokens_reported
+    token_estimate = rolled.token_estimate_usd
+    token_estimate_rows = rolled.token_estimate_rows
+    provider_cost = rolled.provider_cost_usd
+    provider_cost_rows = rolled.provider_cost_rows
+    notes = rolled.notes
+    return {
+        "title": report_title(config.stt_source, config.llm_source, config.tts_source),
+        "price_date": config.price_date,
+        "estimated_usd": round(precall_estimate, 6),
+        "max_spend_usd": config.max_spend_usd,
+        "chars_per_token_est": config.chars_per_token,
+        "percentile_min_n": PERCENTILE_MIN_N,
+        "stages": {
+            "vad": _unmeasured("vad"),
+            "stt": _stage_header(config.stt_source, config.stt_provider, config.stt_url),
+            "llm": _stage_header(
+                config.llm_source,
+                config.llm_provider,
+                _join(config.llm_base_url, "chat/completions"),
+            ),
+            "tool": _unmeasured("tool"),
+            "tts": _stage_header(
+                config.tts_source,
+                config.tts_provider,
+                _join(config.tts_base_url, f"v1/text-to-speech/{config.tts_voice_id}"),
+            ),
+        },
+        "latency": {
+            "note": "Stub and unmeasured stage times are excluded from end-to-end.",
+            "e2e_real_only": summarize_ms(e2e, allow_percentiles=True),
+            "stt": summarize_ms(by_stage["stt"], allow_percentiles=config.stt_source == "real"),
+            "llm": summarize_ms(by_stage["llm"], allow_percentiles=config.llm_source == "real"),
+            "tts": summarize_ms(by_stage["tts"], allow_percentiles=config.tts_source == "real"),
+        },
+        "invariants": {"passed": not failures, "failures": failures},
+        "cost": {
+            "precall_estimate_usd": round(precall_estimate, 6),
+            "token_estimate_usd": round(token_estimate, 8) if token_estimate_rows else None,
+            "token_estimate_rows": token_estimate_rows,
+            "provider_reported_usd": round(provider_cost, 10) if provider_cost_rows else None,
+            "provider_reported_rows": provider_cost_rows,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "cached_tokens": cached_tokens,
+            "cached_tokens_reported": cached_reported,
+            "estimate_note": " ".join(dict.fromkeys(notes)) if notes else UNCACHED_ESTIMATE_NOTE,
+        },
+        "turns": rows,
+        "complete": len(rows) == len(turns),
+    }
+
+
+def _stage_header(source: str, provider: str, url: str) -> dict[str, object]:
+    return {
+        "source": source,
+        "simulated": source != "real",
+        "provider": provider,
+        "endpoint": public_endpoint(url),
+    }
+
+
+@dataclass
+class UsageRollup:
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cached_tokens: int = 0
+    cached_tokens_reported: bool = False
+    token_estimate_usd: float = 0.0
+    token_estimate_rows: int = 0
+    provider_cost_usd: float = 0.0
+    provider_cost_rows: int = 0
+    notes: list[str] = field(default_factory=list)
+
+
+def _rollup_usage(rows: list[dict[str, object]]) -> UsageRollup:
+    rolled = UsageRollup()
+    input_tokens = 0
+    output_tokens = 0
+    cached_tokens = 0
+    cached_reported = False
+    token_estimate = 0.0
+    token_estimate_rows = 0
+    provider_cost = 0.0
+    provider_cost_rows = 0
+    notes: list[str] = []
+    for row in rows:
+        llm = row.get("llm")
+        if not isinstance(llm, dict):
+            continue
+        usage = llm.get("usage")
+        if not isinstance(usage, dict):
+            continue
+        prompt = usage.get("input_tokens")
+        completion = usage.get("output_tokens")
+        if isinstance(prompt, int):
+            input_tokens += prompt
+        if isinstance(completion, int):
+            output_tokens += completion
+        if usage.get("cached_tokens_reported") is True:
+            cached_reported = True
+            cached = usage.get("cached_tokens")
+            if isinstance(cached, int):
+                cached_tokens += cached
+        estimate = usage.get("token_estimate_usd")
+        if isinstance(estimate, int | float) and not isinstance(estimate, bool):
+            token_estimate += float(estimate)
+            token_estimate_rows += 1
+        reported = usage.get("provider_cost_usd")
+        if isinstance(reported, int | float) and not isinstance(reported, bool):
+            provider_cost += float(reported)
+            provider_cost_rows += 1
+        note = usage.get("estimate_note")
+        if isinstance(note, str) and note:
+            notes.append(note)
+    rolled.input_tokens = input_tokens
+    rolled.output_tokens = output_tokens
+    rolled.cached_tokens = cached_tokens
+    rolled.cached_tokens_reported = cached_reported
+    rolled.token_estimate_usd = token_estimate
+    rolled.token_estimate_rows = token_estimate_rows
+    rolled.provider_cost_usd = provider_cost
+    rolled.provider_cost_rows = provider_cost_rows
+    rolled.notes = notes
+    return rolled
 
 
 def _sleep_ms(delay_ms: int) -> None:
