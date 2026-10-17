@@ -20,7 +20,7 @@ Date of the placeholders in the README: 2026-10-17. Version 0.1.1. These are not
 | Raw phone or scripted name in logs | 0 | redacted |
 | Real provider calls in CI | 0 | 0 |
 
-`unsupported_availability_claim` on a live run is a heuristic, not a production review. A passing live invariant can still hide a made-up slot. `cost.estimated_usd` is tokens times the env price (`cost_basis`: `tokens_x_price, cached tokens priced separately`). It is not a provider bill. `provider_reported_usd` is recorded only from `usage.cost_in_usd_ticks` (1 tick = 1e-10 USD).
+`unsupported_availability_claim` on a live run is a heuristic, not a production review. A passing live invariant can still hide a made-up slot. `cost.estimated_usd` is tokens times the env price (`cost_basis`: `tokens_x_price, cached tokens priced separately`). It is not a provider bill. `provider_reported_usd` is recorded only from integer `usage.cost_in_usd_ticks` (1 tick = 1e-10 USD). A tokens×price figure stays in `estimated_usd`.
 
 The aggressive false-cut rate of 1.0 is SIMULATED and holds by construction of the synthetic noise (RMS 0.35) against threshold 0.30. It is not a field rate.
 

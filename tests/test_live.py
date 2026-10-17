@@ -350,6 +350,15 @@ POSITIVE_OFFERS = (
     "Hay lugar a la mañana.",
     "Pasado mañana a las 4 tenemos lugar.",
     "A la una hay lugar.",
+    "Te puedo dar turno el 20 de octubre",
+    "Su cita está agendada para el martes",
+    "Tengo lugar el 22",
+    "Sí, ya te agendé",
+    "Te reservé el 22/10/2026",
+    "Quedó el turno para el 20/10",
+    "I have an opening tomorrow at 3 pm",
+    "We can book you Tuesday at 10am",
+    "I am available Tuesday at 10 am",
 )
 NEGATIVE_OFFERS = (
     HONEST_AGENDA,
@@ -362,6 +371,16 @@ NEGATIVE_OFFERS = (
     "No hay una persona en la línea.",
     "En un rato te llamamos.",
     "Tome ibuprofeno 400 mg cada 8 horas.",
+    "No puedo confirmar disponibilidad el martes a las 10",
+    "Atendemos de lunes a viernes a las 9",
+    "Atendemos de lunes a viernes de 9 a 18",
+    "No tengo turno el martes a las 10",
+    "No tenemos lugar mañana",
+    "I can't book you Tuesday at 10am",
+    "We don't have an opening tomorrow at 3 pm",
+    "We cannot book you at 3 pm",
+    "No está confirmado el martes a las 10",
+    "No quedó agendada la cita",
 )
 
 
@@ -441,6 +460,30 @@ def test_honest_agenda_reply_passes(tmp_path: Path) -> None:
     assert spoken["text"] == HONEST_AGENDA
 
 
+def test_negation_and_office_hours_are_spoken(tmp_path: Path) -> None:
+    phrases = (
+        "No puedo confirmar disponibilidad el martes a las 10",
+        "Atendemos de lunes a viernes a las 9",
+        "I can't book you Tuesday at 10am",
+        "We don't have an opening tomorrow at 3 pm",
+    )
+    for phrase in phrases:
+        turn = LiveTurn("S2", "Qué horarios hay.")
+        transport = RecordingTransport([_stt(), _llm(phrase), _tts()])
+        payload = run_live(
+            _env(),
+            tmp_path,
+            transport=transport,
+            sleeper=lambda _ms: None,
+            turns=(turn,),
+        )
+        invariants = payload["invariants"]
+        assert isinstance(invariants, dict)
+        assert invariants["passed"] is True, phrase
+        spoken = json.loads(transport.calls[2].body.decode("utf-8"))
+        assert spoken["text"] == phrase
+
+
 def test_calendar_tool_names_cover_hints_and_ignore_junk() -> None:
     assert calendar_tool_called_in({"tool_calls": [{"function": {"name": "list_horarios"}}]})
     assert calendar_tool_called_in({"tool_calls": [{"name": "check-availability"}]})
@@ -458,6 +501,12 @@ def test_offered_hours_without_a_tool_call_are_not_spoken(tmp_path: Path) -> Non
         "Mañana a las 10 tenemos lugar",
         "El lunes a las diez hay lugar",
         "Podemos el jueves a las 3 de la tarde",
+        "Te puedo dar turno el 20 de octubre",
+        "Su cita está agendada para el martes",
+        "Tengo lugar el 22",
+        "Sí, ya te agendé",
+        "I have an opening tomorrow at 3 pm",
+        "We can book you Tuesday at 10am",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")
@@ -548,6 +597,8 @@ def test_usage_records_tokens_cached_estimate_and_provider_ticks(tmp_path: Path)
     assert cost["cached_tokens"] == 128
     assert cost["cached_tokens_reported"] is True
     assert cost["cost_basis"] == COST_BASIS
+    assert cost["cost_in_usd_ticks"] == 8555500
+    assert cost["provider_cost_source"] == "usage.cost_in_usd_ticks"
     assert cost["provider_reported_usd"] == pytest.approx(8555500 * 1e-10)
     turns = payload["turns"]
     assert isinstance(turns, list)
@@ -564,6 +615,8 @@ def test_usage_records_tokens_cached_estimate_and_provider_ticks(tmp_path: Path)
     assert cost["estimated_usd"] != pytest.approx(cost["provider_reported_usd"])
     assert "token_estimate_usd" not in cost
     assert "token_estimate_usd" not in recorded
+    assert recorded["cost_in_usd_ticks"] == 8555500
+    assert recorded["provider_cost_source"] == "usage.cost_in_usd_ticks"
 
 
 def test_token_price_is_not_a_provider_bill(tmp_path: Path) -> None:
@@ -571,6 +624,10 @@ def test_token_price_is_not_a_provider_bill(tmp_path: Path) -> None:
         "prompt_tokens": 100,
         "completion_tokens": 10,
         "cost": 1.25,
+        "estimated_usd": 1.25,
+        "provider_reported_usd": 1.25,
+        "total_cost_usd": 1.25,
+        "cost_in_usd_ticks": 0.00125,
     }
     turn = LiveTurn("S1", "Quiero agendar un turno de consulta general.")
     transport = RecordingTransport([_stt(), _llm("No puedo confirmar una reserva.", usage), _tts()])
@@ -595,6 +652,33 @@ def test_token_price_is_not_a_provider_bill(tmp_path: Path) -> None:
     assert "provider_reported_usd" not in recorded
     assert recorded["estimated_usd"] == cost["estimated_usd"]
     assert payload["precall_estimate_usd"] != cost["estimated_usd"]
+    assert "cost_in_usd_ticks" not in cost
+    assert "provider_cost_source" not in cost
+
+
+def test_integer_tick_string_is_a_provider_bill_and_a_replayed_estimate_is_not(
+    tmp_path: Path,
+) -> None:
+    usage = {
+        "prompt_tokens": 10,
+        "completion_tokens": 5,
+        "cost_in_usd_ticks": "8555500",
+        "provider_reported_usd": 9.99,
+    }
+    turn = LiveTurn("S1", "Quiero agendar un turno de consulta general.")
+    payload = run_live(
+        _env(),
+        tmp_path,
+        transport=RecordingTransport([_stt(), _llm("Listo.", usage), _tts()]),
+        sleeper=lambda _ms: None,
+        turns=(turn,),
+    )
+    cost = payload["cost"]
+    assert isinstance(cost, dict)
+    assert cost["cost_in_usd_ticks"] == 8555500
+    assert cost["provider_cost_source"] == "usage.cost_in_usd_ticks"
+    assert cost["provider_reported_usd"] == pytest.approx(8555500 * 1e-10)
+    assert cost["provider_reported_usd"] != pytest.approx(9.99)
 
 
 def test_estimate_ignores_cached_tokens_when_usage_omits_them() -> None:
