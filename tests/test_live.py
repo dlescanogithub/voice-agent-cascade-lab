@@ -399,6 +399,11 @@ POSITIVE_OFFERS = (
     "We're holding a spot for you on Tuesday at 11",
     "Sure, I've reserved 3 o'clock on Thursday for you",
     "Te puedo ofrecer las 15 horas. Guardá reposo por 24 horas",
+    "I've blocked Friday at noon for your appointment",
+    "You're booked with Dr. Lee on Tuesday morning",
+    "You are booked with Dr. Lee on Tuesday morning",
+    "We still have a slot this Saturday at 9",
+    "Okay, Monday at 8 works, it's on the calendar now",
 )
 NEGATIVE_OFFERS = (
     HONEST_AGENDA,
@@ -485,6 +490,26 @@ NEGATIVE_OFFERS = (
     "I have not reserved a time on Thursday",
     "Lunch is at 3 o'clock",
     "El estudio requiere ayuno de 8 horas y guardá reposo por 24 horas",
+    "Ayunar por 10 horas",
+    "Tenés que ayunar por 10 horas",
+    "Tomá el antibiótico cada 8 horas",
+    "Fast for 12 hours",
+    "Rest for 24 hours",
+    "Please rest for 24 hours",
+    "The procedure takes about 3 hours",
+    "The appointment takes about 3 hours",
+    "I have not blocked Friday at noon for your appointment",
+    "The road is blocked on Friday",
+    "I've blocked the driveway on Friday",
+    "You're not booked with Dr. Lee on Tuesday morning",
+    "The conference room is booked on Tuesday",
+    "We don't have a slot this Saturday",
+    "We have no slot this Saturday at 9",
+    "We have a slot in the parking garage",
+    "It's not on the calendar for Monday at 8",
+    "Monday at 8 works for the courier",
+    "Monday's notice is on the calendar by the door",
+    "Podés cancelar hasta 24 horas antes y ayunar por 10 horas",
 )
 
 
@@ -594,6 +619,15 @@ def test_negation_and_office_hours_are_spoken(tmp_path: Path) -> None:
         "I did not schedule your check-up for Friday",
         "We're not holding a spot for you on Tuesday",
         "I have not reserved a time on Thursday",
+        "Ayunar por 10 horas",
+        "Fast for 12 hours",
+        "Rest for 24 hours",
+        "The procedure takes about 3 hours",
+        "I have not blocked Friday at noon for your appointment",
+        "You're not booked with Dr. Lee on Tuesday morning",
+        "We have no slot this Saturday at 9",
+        "It's not on the calendar for Monday at 8",
+        "You can reschedule up to 2 hours before",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")
@@ -661,6 +695,10 @@ def test_offered_hours_without_a_tool_call_are_not_spoken(tmp_path: Path) -> Non
         "I scheduled your check-up for Friday at 2",
         "We're holding a spot for you on Tuesday at 11",
         "Sure, I've reserved 3 o'clock on Thursday for you",
+        "I've blocked Friday at noon for your appointment",
+        "You're booked with Dr. Lee on Tuesday morning",
+        "We still have a slot this Saturday at 9",
+        "Okay, Monday at 8 works, it's on the calendar now",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")

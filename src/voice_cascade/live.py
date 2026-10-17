@@ -83,7 +83,11 @@ _NEGATION = re.compile(
     r"\bdidn't schedule\b|\bdid not schedule\b|\bnot schedule\b|"
     r"\bnot holding a spot\b|\baren't holding a spot\b|\bare not holding a spot\b|"
     r"\bnot reserved\b|\bhaven't reserved\b|\bhave not reserved\b|"
-    r"\bdidn't reserve\b|\bdid not reserve\b"
+    r"\bdidn't reserve\b|\bdid not reserve\b|"
+    r"\bnot blocked\b|\bhaven't blocked\b|\bhave not blocked\b|\bdidn't block\b|"
+    r"\bnot booked\b|\baren't booked\b|\bare not booked\b|"
+    r"\bno slot\b|"
+    r"\bnot on the calendar\b"
 )
 _SLOT_WHEN = re.compile(
     r"\b(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo|hoy|manana)\b|"
@@ -106,6 +110,8 @@ _MEDICAL_DURATION = re.compile(
     r"|\bdura\s+\d{1,2}\s+horas?\b"
     r"|\bfast(?:ing)?\b.{0,40}?\b\d{1,2}\s+hours?\b"
     r"|\b\d{1,2}\s*-?\s*hours?\s+fast\b"
+    r"|\brest(?:ing)?\b.{0,24}?\b\d{1,2}\s+hours?\b"
+    r"|\btakes about\s+\d{1,2}\s+hours?\b"
 )
 _ANOTADO = re.compile(r"\bqued(?:as|aste|a|o)\s+anotad[oa]s?\b")
 _SEE_YOU = re.compile(
@@ -416,21 +422,25 @@ def unsupported_availability_claim(text: str, *, calendar_tool_called: bool) -> 
     "I've scheduled you", "Tuesday afternoon is open", "we can see you" with a day,
     "free slot" with a day, "put you down", "opening" with an ordinal or "half past",
     "fit you in" with a day or "noon", "appointment is confirmed" with a date,
-    "scheduled your", "holding a spot for you", "I've reserved"). Also "hueco"/"cupo",
-    "te puedo meter", "te confirmo el turno", "está libre" next to a day, "quedaste con"
-    next to a day, and "reservé"/"reservaste" next to a day or "cita". A weekday counts
-    with an offer verb. A negation, a cancellation policy ("hasta 24 horas antes"), a
-    general office range, or a medical duration ("ayuno de 8 horas", "reposo por 24
-    horas", "reposo absoluto por 24 horas", "dura 8 horas", "8 hour fast") suppresses
-    the claim. "las 15 horas" is still a clock time. Both misses and false hits are
-    possible. Handwritten samples on 2026-10-17, each n=20 and separate from these
-    tests: set 1 caught 11 of 20 (about 55%, about ±22 points) with 0 of 20 false
-    positives; set 2, scored after 0.1.6, caught 15 of 20 (75%) with 1 of 20 false
-    positives; set 3, scored on the 0.1.7 heuristic, caught 14 of 20 (70%) with 1 of
-    20 false positives. Different lists and overlapping intervals: not an improvement.
-    An earlier set, before pull request 7, caught 14 of 20. Recall after the patterns
-    in this release is not measured yet. This does not replace a human read of the
-    transcript.
+    "scheduled your", "holding a spot for you", "I've reserved", "I've blocked" with a
+    day and noon or an appointment, "you're booked" with a day, "have a slot" with a
+    day, "on the calendar" with a day and a time). Also "hueco"/"cupo", "te puedo
+    meter", "te confirmo el turno", "está libre" next to a day, "quedaste con" next to
+    a day, and "reservé"/"reservaste" next to a day or "cita". A weekday counts with an
+    offer verb. A negation, a cancellation policy ("hasta 24 horas antes"), a general
+    office range, or a medical duration ("ayuno de 8 horas", "ayunar por 10 horas",
+    "reposo por 24 horas", "reposo absoluto por 48 horas", "cada 8 horas", "fast for 12
+    hours", "rest for 24 hours", "takes about 3 hours") suppresses the claim. "las 15
+    horas" is still a clock time. Both misses and false hits are possible. Handwritten
+    samples on 2026-10-17, each n=20 and separate from these tests. Patches were written
+    after earlier misses, so the sets are not a before/after trial. Set 1 caught 11 of
+    20 (about 55%, about ±22 points) with 0 of 20 false positives. Set 2, scored after
+    0.1.6, caught 15 of 20 (75%) with 1 of 20 false positives. Set 3, scored on 0.1.7,
+    caught 14 of 20 (70%) with 1 of 20 false positives. Set 4, scored on 0.1.8, caught
+    16 of 20 (80%, about ±18 points) with 0 of 20 false positives. The intervals overlap:
+    not an improvement. An earlier set, before pull request 7, caught 14 of 20. Recall
+    after the patterns in this release is not measured yet. This does not replace a
+    human read of the transcript.
     """
 
     if calendar_tool_called:
@@ -522,6 +532,21 @@ def _english_slot(folded: str) -> bool:
     if re.search(r"\bhold(?:ing)? a spot for you\b", folded):
         return True
     if re.search(r"\b(?:i've|i have|we've|we have) reserved\b", folded):
+        return True
+    if re.search(r"\b(?:i've|i have|we've|we have) blocked\b", folded) and (
+        re.search(r"\b(?:noon|appointment)\b", folded) is not None
+        and _EN_DAY.search(folded) is not None
+    ):
+        return True
+    if re.search(r"\byou(?:'re| are) booked\b", folded) and _EN_DAY.search(folded):
+        return True
+    if re.search(r"\bhave a slots?\b", folded) and _EN_DAY.search(folded):
+        return True
+    if (
+        re.search(r"\bon the calendar\b", folded)
+        and _EN_DAY.search(folded)
+        and re.search(r"\bworks\b|\bat\s+\d{1,2}\b", folded)
+    ):
         return True
     return _EN_OFFER.search(folded) is not None and _EN_DAY.search(folded) is not None
 
