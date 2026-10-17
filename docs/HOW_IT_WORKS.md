@@ -57,7 +57,7 @@ Si el lápiz ni siquiera tocó el papel (timeout antes de escribir) y los reinte
 
 ## Límites honestos
 
-- No mide proveedores en CI. La tabla "Measured with real providers" del README queda vacía salvo que el dueño pegue una corrida cuyo título sea exactamente ese. Si STT o TTS son un stub local, el archivo se llama "Partially measured" y no entra en esa tabla. Si falta configuración, o si la estimación pasa `MAX_LIVE_SPEND_USD`, el proceso sale con código 2 y no manda ningún request. Sin herramienta de agenda, inventar un horario (una hora concreta o "tengo disponible") es una falla.
+- No mide proveedores en CI. La tabla "Measured with real providers" del README queda vacía salvo que el dueño pegue una corrida cuyo título sea exactamente ese. Si STT o TTS son un stub local, el archivo se llama "Partially measured" y no entra en esa tabla. Si falta configuración, o si la estimación pasa `MAX_LIVE_SPEND_USD`, el proceso sale con código 2 y no manda ningún request. `unsupported_availability_claim` es un heurístico: marca una hora ("15 hs", "a las diez", "3 de la tarde") o un día junto con una oferta, y solo si ese turno no llamó una herramienta de agenda. Puede fallar en falso (no ve todas las formas de decirlo) y no reemplaza una lectura humana. `cost.estimated_usd` es tokens por el precio del entorno, no la factura del proveedor. `provider_reported_usd` aparece solo si la respuesta trae `usage.cost_in_usd_ticks` (1 tick = 1e-10 USD).
 - El "LLM" no elige el id del turno leyendo la frase. Lo pone el guion.
 - El VAD es un umbral de energía sobre frames sintéticos, no una red neuronal.
 - No hay WebRTC, ni SIP, ni consentimiento de grabación, ni varios idiomas.
