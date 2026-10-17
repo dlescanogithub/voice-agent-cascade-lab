@@ -69,10 +69,16 @@ _EN_DAY = re.compile(
 _EN_OFFER = re.compile(r"\bopening\b|\bbook you\b|\bavailable\b")
 _NEGATION = re.compile(
     r"\bno puedo\b|\bno tengo\b|\bno tenemos\b|\bno hay\b|\bno esta\b|"
-    r"\bno qued(?:o|aste|as)\b|"
+    r"\bno qued(?:o|aste|as)\b|\bno te puedo\b|\bno te confirmo\b|"
     r"\bi can(?:not|'t)\b|\bi cant\b|"
     r"\bwe (?:do not|don't|dont) have\b|"
-    r"\bwe can(?:not|'t)\b|\bwe cant\b"
+    r"\bwe can(?:not|'t)\b|\bwe cant\b|"
+    r"\bnot available\b|\bno slots\b|\bare not available\b|\baren't available\b|"
+    r"\bhaven't scheduled\b|\bhave not scheduled\b|\bnot scheduled you\b"
+)
+_SLOT_WHEN = re.compile(
+    r"\b(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo|hoy|manana)\b|"
+    r"\bsemana proxima\b|\bsemana que viene\b|\ba primera hora\b"
 )
 _POLICY = re.compile(
     r"\b(?:podes|puede|pueden)\s+(?:cancel\w*|reprogram\w*)\b.{0,48}\bantes\b"
@@ -384,11 +390,14 @@ def unsupported_availability_claim(text: str, *, calendar_tool_called: bool) -> 
     "agendada", "te reservé", "confirmado", "quedás anotado"), "te recibe" with a
     relative day, "disponibilidad" with a time reference, "nos vemos el viernes 23",
     or English ("opening", "book you", "there's availability", "I booked you in",
-    "for the 5th", "at 3 pm"). A weekday counts with an offer verb.
-    A negation, a cancellation policy ("hasta 24 horas antes"), or a general office
-    range suppresses the claim. Both misses and false hits are possible. A 2026-10-17
-    handwritten sample caught 14 of 20 new claims before the patterns added after
-    that sample. This does not replace a human read of the transcript.
+    "for the 5th", "at 3 pm", "appointment open", "slots are available on the 12th",
+    "I've scheduled you", "Tuesday afternoon is open"). Also "hueco"/"cupo", "te puedo
+    meter", "te confirmo el turno", and "está libre" next to a day. A weekday counts
+    with an offer verb. A negation, a cancellation policy ("hasta 24 horas antes"),
+    or a general office range suppresses the claim. Both misses and false hits are
+    possible. Handwritten samples on 2026-10-17: an earlier set caught 14 of 20, and
+    a later set of unseen phrases caught 11 of 20. Recall after the patterns for that
+    later set is not measured yet. This does not replace a human read of the transcript.
     """
 
     if calendar_tool_called:
@@ -432,6 +441,18 @@ def _english_slot(folded: str) -> bool:
         folded,
     ):
         return True
+    if re.search(r"\bappointment open\b", folded) or re.search(
+        r"\bslots are available on\b", folded
+    ):
+        return True
+    if re.search(r"\b(?:i've|i have) scheduled you\b", folded):
+        return True
+    if re.search(
+        r"\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today)"
+        r"\s+(?:morning|afternoon|evening)\s+is open\b",
+        folded,
+    ):
+        return True
     return _EN_OFFER.search(folded) is not None and _EN_DAY.search(folded) is not None
 
 
@@ -442,7 +463,17 @@ def _soft_booking(folded: str) -> bool:
         return True
     if re.search(r"\bte (?:recibe|espera|atiende)\b", folded) and _WHEN.search(folded):
         return True
-    return re.search(r"\bdisponibilidad\b", folded) is not None and _WHEN.search(folded) is not None
+    if re.search(r"\bdisponibilidad\b", folded) and _WHEN.search(folded):
+        return True
+    if re.search(r"\b(?:hueco|cupo)\b", folded) and _SLOT_WHEN.search(folded):
+        return True
+    if re.search(r"\b(?:te puedo|puedo) meter\b", folded) and _SLOT_WHEN.search(folded):
+        return True
+    if re.search(r"\bconfirm(?:o|amos)\b", folded) and re.search(
+        r"\bturno\b|\blas\s+\d{1,2}\b", folded
+    ):
+        return True
+    return bool(re.search(r"\besta libre\b", folded) and _SLOT_WHEN.search(folded))
 
 
 def calendar_tool_called_in(message: Mapping[str, object]) -> bool:

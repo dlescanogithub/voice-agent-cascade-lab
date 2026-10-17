@@ -372,6 +372,18 @@ POSITIVE_OFFERS = (
     "I booked you in for the 5th at noon",
     "Nos vemos el viernes 23",
     "Te veo el lunes 4",
+    "Tengo un hueco el jueves por la tarde",
+    "Sí, el miércoles tenemos cupo",
+    "Hay cupo el lunes",
+    "Te puedo meter mañana a primera hora",
+    "Te puedo meter el jueves a primera hora",
+    "Te confirmo el turno de las 10 y cuarto",
+    "El sábado a la mañana está libre",
+    "El jueves por la tarde está libre",
+    "We have an appointment open tomorrow morning",
+    "Slots are available on the 12th, 13th and 14th",
+    "I've scheduled you for next Wednesday at 4",
+    "Next Tuesday afternoon is open if you'd like",
 )
 NEGATIVE_OFFERS = (
     HONEST_AGENDA,
@@ -398,6 +410,24 @@ NEGATIVE_OFFERS = (
     "Podés reprogramar hasta 2 horas antes",
     "You can cancel up to 24 hours before",
     "You can reschedule up to 2 hours before",
+    "No tengo hueco el jueves por la tarde",
+    "No hay cupo el miércoles",
+    "No te puedo meter mañana a primera hora",
+    "El cupo de la obra social se tramita en recepción",
+    "Dejá un hueco por la tarde para almorzar",
+    "Llegá a primera hora si podés",
+    "Te confirmo que recibimos el formulario",
+    "No te confirmo el turno",
+    "El sábado a la mañana está cerrado",
+    "El estacionamiento está libre",
+    "We don't have an appointment open tomorrow morning",
+    "Slots are not available on the 12th",
+    "Ask whether slots are available",
+    "I have not scheduled you for Wednesday",
+    "Next Tuesday afternoon is closed",
+    "The loading dock on Tuesday afternoon is for deliveries",
+    "Podés cancelar el hueco hasta 24 horas antes",
+    "You can cancel the slot up to 24 hours before",
 )
 
 
@@ -486,6 +516,11 @@ def test_negation_and_office_hours_are_spoken(tmp_path: Path) -> None:
         "Podés cancelar hasta 24 horas antes",
         "Podés reprogramar hasta 2 horas antes",
         "You can cancel up to 24 hours before",
+        "No tengo hueco el jueves por la tarde",
+        "El sábado a la mañana está cerrado",
+        "Slots are not available on the 12th",
+        "Next Tuesday afternoon is closed",
+        "Podés cancelar el hueco hasta 24 horas antes",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")
@@ -533,6 +568,15 @@ def test_offered_hours_without_a_tool_call_are_not_spoken(tmp_path: Path) -> Non
         "There's availability next Thursday",
         "I booked you in for the 5th at noon",
         "Nos vemos el viernes 23",
+        "Tengo un hueco el jueves por la tarde",
+        "Sí, el miércoles tenemos cupo",
+        "Te puedo meter mañana a primera hora",
+        "Te confirmo el turno de las 10 y cuarto",
+        "El sábado a la mañana está libre",
+        "We have an appointment open tomorrow morning",
+        "Slots are available on the 12th, 13th and 14th",
+        "I've scheduled you for next Wednesday at 4",
+        "Next Tuesday afternoon is open if you'd like",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")
