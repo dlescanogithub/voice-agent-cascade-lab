@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.7] - 2026-10-17
+
+- `unsupported_availability_claim` ignores a medical duration or instruction ("requiere ayuno de 8 horas", "ayunar durante 8 horas", "en ayunas", "8 horas de ayuno", "reposo de 8 horas", "dura 8 horas", "an 8 hour fast"). "las 15 horas" is still a clock time. The same sentence can still flag when a separate clock time remains.
+- The check also flags "quedaste con" next to a day, "we can see you" next to a day, "free slot" next to a day, "put you down", and "opening" next to an ordinal or "half past". Cancellation and reschedule policies stay quiet.
+- Handwritten samples from 2026-10-17, each n=20 and separate from these unit tests. Set 1: 11/20 (55%, about ±22 points) and 0/20 false positives. Set 2, scored on the 0.1.6 heuristic: 15/20 (75%) and 1/20 false positives. The lists differ, n is small, and the intervals overlap, so 75% is not an improvement over 55%. An earlier set, measured before the patterns in pull request 7, was 14/20 claims and 1/18 clean sentences. Recall after this change is not measured yet.
+
 ## [0.1.6] - 2026-10-17
 
 - `unsupported_availability_claim` also flags "hueco"/"cupo", "te puedo meter", "te confirmo el turno", "está libre" next to a day, "appointment open", "slots are available on the 12th", "I've scheduled you", and "Tuesday afternoon is open". Cancellation policies stay quiet.

@@ -384,6 +384,13 @@ POSITIVE_OFFERS = (
     "Slots are available on the 12th, 13th and 14th",
     "I've scheduled you for next Wednesday at 4",
     "Next Tuesday afternoon is open if you'd like",
+    "quedaste con la Dra. López el viernes 6",
+    "Quedaste con el Dr. Pérez el lunes 3",
+    "We can see you tomorrow afternoon",
+    "There's a free slot on Friday morning",
+    "I've put you down for Wednesday at 9",
+    "Our next opening is the 21st at half past two",
+    "El estudio requiere ayuno de 8 horas, y te puedo ofrecer las 15 horas",
 )
 NEGATIVE_OFFERS = (
     HONEST_AGENDA,
@@ -428,6 +435,27 @@ NEGATIVE_OFFERS = (
     "The loading dock on Tuesday afternoon is for deliveries",
     "Podés cancelar el hueco hasta 24 horas antes",
     "You can cancel the slot up to 24 hours before",
+    "El estudio requiere ayuno de 8 horas",
+    "El estudio requiere ayuno de 12 horas",
+    "Tenés que ayunar durante 8 horas",
+    "Debés estar en ayunas durante 6 horas",
+    "Indicación: 8 horas de ayuno",
+    "El estudio dura 8 horas",
+    "Reposo de 8 horas",
+    "The study requires an 8 hour fast",
+    "You need to fast for 8 hours",
+    "Quedaste con la duda",
+    "We can see you in the lobby",
+    "We cannot see you tomorrow afternoon",
+    "There is no free slot on Friday morning",
+    "The free slot for coats is in the hall",
+    "I have not put you down for Wednesday",
+    "I didn't put you down for Wednesday",
+    "Lunch is at half past two",
+    "The next opening of the wing is a renovation",
+    "Our next opening is in the spring",
+    "We don't have a next opening on the 21st",
+    "Podés reprogramar el turno hasta 24 horas antes",
 )
 
 
@@ -521,6 +549,13 @@ def test_negation_and_office_hours_are_spoken(tmp_path: Path) -> None:
         "Slots are not available on the 12th",
         "Next Tuesday afternoon is closed",
         "Podés cancelar el hueco hasta 24 horas antes",
+        "El estudio requiere ayuno de 8 horas",
+        "Tenés que ayunar durante 8 horas",
+        "The study requires an 8 hour fast",
+        "We cannot see you tomorrow afternoon",
+        "There is no free slot on Friday morning",
+        "I have not put you down for Wednesday",
+        "Podés reprogramar el turno hasta 24 horas antes",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")
@@ -577,6 +612,11 @@ def test_offered_hours_without_a_tool_call_are_not_spoken(tmp_path: Path) -> Non
         "Slots are available on the 12th, 13th and 14th",
         "I've scheduled you for next Wednesday at 4",
         "Next Tuesday afternoon is open if you'd like",
+        "quedaste con la Dra. López el viernes 6",
+        "We can see you tomorrow afternoon",
+        "There's a free slot on Friday morning",
+        "I've put you down for Wednesday at 9",
+        "Our next opening is the 21st at half past two",
     )
     for phrase in phrases:
         turn = LiveTurn("S2", "Qué horarios hay.")
