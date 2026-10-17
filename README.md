@@ -12,7 +12,7 @@ A voice cascade hides time in five places: waiting to decide the caller has stop
 
 On the fictional **Clínica Aurora** (scheduling only, never clinical advice) the harness runs 49 scripted calls. The operating point is the **balanced** VAD profile. The latency cohort is 36 of those calls.
 
-**SIMULATED placeholder, 2026-10-17**, package version **0.1.1**, command `python -m voice_cascade eval` (balanced profile). git revision: `RUNTIME_SHA` (runtime tree; a later commit may only record this hash).
+**SIMULATED placeholder, 2026-10-17**, package version **0.1.1**, command `python -m voice_cascade eval` (balanced profile). git revision: `be09444732be7c1d667c0a1d6ffe2120fd3a484c` (runtime tree; the following commit only records this hash).
 
 The harness computes and gates a latency budget. **p95 end-to-end: 1004.5 ms (SIMULATED)** against a budget of 2500 ms. **p50 end-to-end: 896 ms (SIMULATED)**. These two percentiles differ because each stage is a seeded draw, not a constant. They are placeholders until real providers are measured. The same command exits 0 only when the invariant gate passes: task completed or escalated, no double booking, no clinical advice, PII redacted, latency budget held, eligible barge-ins cancelled.
 
@@ -49,7 +49,7 @@ The fake LLM does not read free text as a model. It folds the transcript, picks 
 
 ## SIMULATED latency report
 
-All figures below are **SIMULATED** placeholders, from `python -m voice_cascade eval` and `python -m voice_cascade latency-report`. Date: 2026-10-17. Version: 0.1.1. Seed: 42. Percentiles use the inclusive linear method (NumPy type 7) on the 36-call latency cohort. git revision: `RUNTIME_SHA`. The harness computes and gates a latency budget. The numbers themselves are placeholders until real providers are measured.
+All figures below are **SIMULATED** placeholders, from `python -m voice_cascade eval` and `python -m voice_cascade latency-report`. Date: 2026-10-17. Version: 0.1.1. Seed: 42. Percentiles use the inclusive linear method (NumPy type 7) on the 36-call latency cohort. git revision: `be09444732be7c1d667c0a1d6ffe2120fd3a484c`. The harness computes and gates a latency budget. The numbers themselves are placeholders until real providers are measured.
 
 Draws are lognormal. The median is exp(mu). Sigma is the standard deviation of the underlying normal. Box-Muller on `random.Random.random()` keeps Python 3.11 and 3.12 on the same values. Samples are not capped at the budget. The floor is 1 ms. Parameters are **[EST]**.
 
