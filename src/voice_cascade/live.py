@@ -39,7 +39,7 @@ LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "0.0.0.0"})
 _HOUR_WORD = r"una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce"
 _CLOCK_TIME = re.compile(r"\b(?:[01]?\d|2[0-3])[:.][0-5]\d\b")
 _HS_TIME = re.compile(r"\b\d{1,2}\s*hs\b")
-_HORAS_TIME = re.compile(r"(?<!cada )\b\d{1,2}\s+horas?\b")
+_HORAS_TIME = re.compile(r"(?<!cada )\b\d{1,2}\s+horas?\b(?!\s+antes\b)")
 _A_LAS_NUM = re.compile(r"\ba las\s+\d{1,2}\b")
 _LAS_WORD = re.compile(rf"\blas\s+(?:{_HOUR_WORD})\b")
 _A_LA_UNA = re.compile(r"\ba la una\b")
@@ -68,10 +68,25 @@ _EN_DAY = re.compile(
 )
 _EN_OFFER = re.compile(r"\bopening\b|\bbook you\b|\bavailable\b")
 _NEGATION = re.compile(
-    r"\bno puedo\b|\bno tengo\b|\bno tenemos\b|\bno hay\b|\bno esta\b|\bno quedo\b|"
+    r"\bno puedo\b|\bno tengo\b|\bno tenemos\b|\bno hay\b|\bno esta\b|"
+    r"\bno qued(?:o|aste|as)\b|"
     r"\bi can(?:not|'t)\b|\bi cant\b|"
     r"\bwe (?:do not|don't|dont) have\b|"
     r"\bwe can(?:not|'t)\b|\bwe cant\b"
+)
+_POLICY = re.compile(
+    r"\b(?:podes|puede|pueden)\s+(?:cancel\w*|reprogram\w*)\b.{0,48}\bantes\b"
+    r"|\byou can\s+(?:cancel|reschedule|reprogram)\b.{0,48}\bbefore\b"
+    r"|\b(?:hasta|up to)\s+\d{1,3}\s+(?:horas?|hours?)\s+(?:antes|before)\b"
+)
+_ANOTADO = re.compile(r"\bqued(?:as|aste|a|o)\s+anotad[oa]s?\b")
+_SEE_YOU = re.compile(
+    r"\b(?:nos vemos|te veo)\s+el\s+"
+    r"(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo)\s+\d{1,2}\b"
+)
+_WHEN = re.compile(
+    r"\bpasado manana\b|\bsemana proxima\b|\bsemana que viene\b|\btemprano\b|\btarde\b|"
+    r"\b(?:hoy|manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b"
 )
 _OFFICE_SPAN = re.compile(
     r"\bde\s+(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo)\s+a\s+"
@@ -366,21 +381,29 @@ def unsupported_availability_claim(text: str, *, calendar_tool_called: bool) -> 
 
     Concrete signals: a clock time, "N hs", "N horas", "a las N", a Spanish hour, a
     calendar date ("el 20 de octubre", "el 22", "20/10"), a confirmation ("agendé",
-    "agendada", "te reservé", "confirmado"), or English ("opening", "book you",
-    "available", "at 3 pm", "10am", "Tuesday"). A weekday counts with an offer verb.
-    A negation ("no puedo", "no tengo", "I can't", "we don't have") or a general
-    office range ("de lunes a viernes") suppresses the claim. Both misses and false
-    hits are possible. This does not replace a human read of the transcript.
+    "agendada", "te reservé", "confirmado", "quedás anotado"), "te recibe" with a
+    relative day, "disponibilidad" with a time reference, "nos vemos el viernes 23",
+    or English ("opening", "book you", "there's availability", "I booked you in",
+    "for the 5th", "at 3 pm"). A weekday counts with an offer verb.
+    A negation, a cancellation policy ("hasta 24 horas antes"), or a general office
+    range suppresses the claim. Both misses and false hits are possible. A 2026-10-17
+    handwritten sample caught 14 of 20 new claims before the patterns added after
+    that sample. This does not replace a human read of the transcript.
     """
 
     if calendar_tool_called:
         return False
     folded = fold(text).replace("\u2019", "'").replace("\u2018", "'")
-    if _NEGATION.search(folded):
+    if _NEGATION.search(folded) or _POLICY.search(folded):
         return False
     if _is_general_hours(folded):
         return False
-    if _CONFIRM.search(folded) or _DATE.search(folded) or _english_slot(folded):
+    if (
+        _CONFIRM.search(folded)
+        or _DATE.search(folded)
+        or _english_slot(folded)
+        or _soft_booking(folded)
+    ):
         return True
     if any(pattern.search(folded) for pattern in _TIME_PATTERNS):
         return True
@@ -398,9 +421,28 @@ def _is_general_hours(folded: str) -> bool:
 
 
 def _english_slot(folded: str) -> bool:
-    if _EN_CLOCK.search(folded) or re.search(r"\bbook you\b", folded):
+    if _EN_CLOCK.search(folded) or re.search(r"\bbook you\b|\bi booked you in\b", folded):
+        return True
+    if re.search(r"\bthere(?:'s| is) availability\b", folded):
+        return True
+    if re.search(r"\bfor the \d{1,2}(?:st|nd|rd|th)\b", folded):
+        return True
+    if re.search(r"\bavailability\b", folded) and re.search(
+        r"\bnext\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|week)\b",
+        folded,
+    ):
         return True
     return _EN_OFFER.search(folded) is not None and _EN_DAY.search(folded) is not None
+
+
+def _soft_booking(folded: str) -> bool:
+    """Booking phrasing that does not name a clock time."""
+
+    if _ANOTADO.search(folded) or _SEE_YOU.search(folded):
+        return True
+    if re.search(r"\bte (?:recibe|espera|atiende)\b", folded) and _WHEN.search(folded):
+        return True
+    return re.search(r"\bdisponibilidad\b", folded) is not None and _WHEN.search(folded) is not None
 
 
 def calendar_tool_called_in(message: Mapping[str, object]) -> bool:

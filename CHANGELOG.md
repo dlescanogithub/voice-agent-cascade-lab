@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.5] - 2026-10-17
+
+- `unsupported_availability_claim` also flags "quedás anotado", "te recibe" with a relative day, "disponibilidad" with a time reference, "nos vemos el viernes 23", "there's availability", "I booked you in", and "for the 5th". A cancellation policy ("hasta 24 horas antes", "up to 24 hours before") is not a slot. On 2026-10-17 a handwritten sample of new phrases caught 14 of 20 claims and 1 of 18 clean sentences, before these patterns. That recall was not remeasured.
+
 ## [0.1.4] - 2026-10-17
 
 - `unsupported_availability_claim` also flags a calendar date ("el 20 de octubre", "el 22", `dd/mm`), a confirmation ("agendé", "agendada", "te reservé", "confirmado"), and an English slot ("opening", "book you", "available", "3 pm", "10am", "Tuesday"). A negation ("no puedo", "no tengo", "I can't", "we don't have") or a general office range ("de lunes a viernes") does not count. False negatives and false positives remain possible.
