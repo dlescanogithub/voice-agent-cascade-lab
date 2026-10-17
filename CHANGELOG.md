@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.9] - 2026-10-17
+
+- `unsupported_availability_claim` also flags "I've blocked" with a day and noon or an appointment, "you're booked" with a day, "have a slot" with a day, and "on the calendar" with a day and a time. Cancellation, reschedule, fasting, and rest phrases stay quiet.
+- "ayunar por N horas", "reposo absoluto por N horas", "cada N horas", "fast for N hours", "rest for N hours", and "takes about N hours" stay quiet.
+- Handwritten samples from 2026-10-17, each n=20 and separate from these unit tests. Patches were written after seeing earlier misses, so these are not a before/after trial. Set 1: 11/20 (55%, about ±22 points) and 0/20 false positives. Set 2, scored on the 0.1.6 heuristic: 15/20 (75%) and 1/20 false positives. Set 3, scored on the 0.1.7 heuristic: 14/20 (70%) and 1/20 false positives. Set 4, scored on the 0.1.8 heuristic: 16/20 (80%, about ±18 points) and 0/20 false positives. Four different lists, small n, overlapping intervals: 55%, 75%, 70%, and 80% are not an improvement over one another. Recall after this change is not measured yet.
+
 ## [0.1.8] - 2026-10-17
 
 - `unsupported_availability_claim` ignores "reposo por N horas", "reposo absoluto por N horas", "reposo durante N horas", and "N horas de reposo" ("guardá reposo por 24 horas"). "reposo de N horas" and fasting instructions stay quiet. "las 15 horas" is still a clock time.
