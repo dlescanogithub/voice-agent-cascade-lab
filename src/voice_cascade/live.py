@@ -48,7 +48,37 @@ _DAY_PERIOD = re.compile(
 )
 _DAY = re.compile(r"\b(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo|hoy|manana)\b")
 _OFFER = re.compile(
-    r"\b(?:ofrec\w*|podemos|disponible\w*|turno\w*)\b|tenemos lugar|hay lugar|hay turnos?\b"
+    r"\b(?:ofrec\w*|podemos|disponible\w*|turno\w*)\b|"
+    r"tenemos lugar|hay lugar|tengo lugar|hay turnos?\b"
+)
+_MONTHS = (
+    "enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|"
+    "octubre|noviembre|diciembre"
+)
+_DATE = re.compile(
+    rf"\b\d{{1,2}}\s+de\s+(?:{_MONTHS})\b|\bel\s+\d{{1,2}}\b|\b\d{{1,2}}/\d{{1,2}}(?:/\d{{2,4}})?\b"
+)
+_CONFIRM = re.compile(
+    r"\bagende\b|\bagendada\b|\bagendado\b|\bagendamos\b|"
+    r"\bte reserve\b|\breservad[oa]s?\b|\bconfirme\b|\bconfirmad[oa]s?\b"
+)
+_EN_CLOCK = re.compile(r"\b(?:at\s+)?\d{1,2}(?::[0-5]\d)?\s*(?:a\.?m\.?|p\.?m\.?)\b")
+_EN_DAY = re.compile(
+    r"\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today)\b"
+)
+_EN_OFFER = re.compile(r"\bopening\b|\bbook you\b|\bavailable\b")
+_NEGATION = re.compile(
+    r"\bno puedo\b|\bno tengo\b|\bno tenemos\b|\bno hay\b|\bno esta\b|\bno quedo\b|"
+    r"\bi can(?:not|'t)\b|\bi cant\b|"
+    r"\bwe (?:do not|don't|dont) have\b|"
+    r"\bwe can(?:not|'t)\b|\bwe cant\b"
+)
+_OFFICE_SPAN = re.compile(
+    r"\bde\s+(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo)\s+a\s+"
+    r"(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b"
+)
+_CONCRETE_BOOKING = re.compile(
+    r"\b(?:ofrec\w*|turno\w*|disponible\w*|podemos)\b|tenemos lugar|hay lugar|tengo lugar"
 )
 _TIME_PATTERNS = (
     _CLOCK_TIME,
@@ -334,19 +364,43 @@ def report_title(stt_source: str, llm_source: str, tts_source: str) -> str:
 def unsupported_availability_claim(text: str, *, calendar_tool_called: bool) -> bool:
     """Heuristic. True when the reply offers a slot and this turn called no calendar tool.
 
-    A clock time, "N hs", "N horas", "a las N", or a Spanish hour ("diez", "tres de la
-    tarde") is enough. "cada N horas" is left alone (a dose interval, not a slot).
-    A weekday, "hoy", or "mañana" counts only together with an offer ("ofrecer",
-    "tenemos lugar", "hay lugar", "podemos", "disponible", "turno"). Paraphrases can
-    slip through. This does not replace a human read of the transcript.
+    Concrete signals: a clock time, "N hs", "N horas", "a las N", a Spanish hour, a
+    calendar date ("el 20 de octubre", "el 22", "20/10"), a confirmation ("agendé",
+    "agendada", "te reservé", "confirmado"), or English ("opening", "book you",
+    "available", "at 3 pm", "10am", "Tuesday"). A weekday counts with an offer verb.
+    A negation ("no puedo", "no tengo", "I can't", "we don't have") or a general
+    office range ("de lunes a viernes") suppresses the claim. Both misses and false
+    hits are possible. This does not replace a human read of the transcript.
     """
 
     if calendar_tool_called:
         return False
-    folded = fold(text)
+    folded = fold(text).replace("\u2019", "'").replace("\u2018", "'")
+    if _NEGATION.search(folded):
+        return False
+    if _is_general_hours(folded):
+        return False
+    if _CONFIRM.search(folded) or _DATE.search(folded) or _english_slot(folded):
+        return True
     if any(pattern.search(folded) for pattern in _TIME_PATTERNS):
         return True
     return _DAY.search(folded) is not None and _OFFER.search(folded) is not None
+
+
+def _is_general_hours(folded: str) -> bool:
+    """Office range such as 'de lunes a viernes', without a concrete booking."""
+
+    if _OFFICE_SPAN.search(folded) is None:
+        return False
+    if _CONFIRM.search(folded) or _DATE.search(folded) or _english_slot(folded):
+        return False
+    return _CONCRETE_BOOKING.search(folded) is None
+
+
+def _english_slot(folded: str) -> bool:
+    if _EN_CLOCK.search(folded) or re.search(r"\bbook you\b", folded):
+        return True
+    return _EN_OFFER.search(folded) is not None and _EN_DAY.search(folded) is not None
 
 
 def calendar_tool_called_in(message: Mapping[str, object]) -> bool:
@@ -670,10 +724,26 @@ def _usage_from_body(payload: Mapping[str, object]) -> dict[str, object]:
         "cost_basis": COST_BASIS,
         "estimate_note": UNCACHED_ESTIMATE_NOTE,
     }
-    ticks = raw.get("cost_in_usd_ticks")
-    if isinstance(ticks, int | float) and not isinstance(ticks, bool):
-        usage["provider_reported_usd"] = round(float(ticks) * USD_TICKS, 10)
+    ticks = _tick_count(raw.get("cost_in_usd_ticks")) if "cost_in_usd_ticks" in raw else None
+    if ticks is not None:
+        usage["cost_in_usd_ticks"] = ticks
+        usage["provider_reported_usd"] = round(ticks * USD_TICKS, 10)
+        usage["provider_cost_source"] = "usage.cost_in_usd_ticks"
     return usage
+
+
+def _tick_count(value: object) -> int | None:
+    """Integer tick count only. A fractional dollar amount is not this field."""
+
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str) and re.fullmatch(r"-?\d+", value.strip()):
+        return int(value.strip())
+    return None
 
 
 def token_estimate_usd(
@@ -944,6 +1014,7 @@ def _report(
     token_estimate_rows = rolled.estimated_rows
     provider_cost = rolled.provider_reported_usd
     provider_cost_rows = rolled.provider_reported_rows
+    provider_ticks = rolled.cost_in_usd_ticks
     notes = rolled.notes
     cost: dict[str, object] = {
         "precall_estimate_usd": round(precall_estimate, 6),
@@ -957,7 +1028,9 @@ def _report(
         "estimate_note": " ".join(dict.fromkeys(notes)) if notes else UNCACHED_ESTIMATE_NOTE,
     }
     if provider_cost_rows:
+        cost["cost_in_usd_ticks"] = provider_ticks
         cost["provider_reported_usd"] = round(provider_cost, 10)
+        cost["provider_cost_source"] = "usage.cost_in_usd_ticks"
         cost["provider_reported_rows"] = provider_cost_rows
     return {
         "title": report_title(config.stt_source, config.llm_source, config.tts_source),
@@ -1014,6 +1087,7 @@ class UsageRollup:
     estimated_rows: int = 0
     provider_reported_usd: float = 0.0
     provider_reported_rows: int = 0
+    cost_in_usd_ticks: int = 0
     notes: list[str] = field(default_factory=list)
 
 
@@ -1027,6 +1101,7 @@ def _rollup_usage(rows: list[dict[str, object]]) -> UsageRollup:
     token_estimate_rows = 0
     provider_cost = 0.0
     provider_cost_rows = 0
+    provider_ticks = 0
     notes: list[str] = []
     for row in rows:
         llm = row.get("llm")
@@ -1050,9 +1125,10 @@ def _rollup_usage(rows: list[dict[str, object]]) -> UsageRollup:
         if isinstance(estimate, int | float) and not isinstance(estimate, bool):
             token_estimate += float(estimate)
             token_estimate_rows += 1
-        reported = usage.get("provider_reported_usd")
-        if isinstance(reported, int | float) and not isinstance(reported, bool):
-            provider_cost += float(reported)
+        ticks = usage.get("cost_in_usd_ticks")
+        if isinstance(ticks, int) and not isinstance(ticks, bool):
+            provider_ticks += ticks
+            provider_cost += ticks * USD_TICKS
             provider_cost_rows += 1
         note = usage.get("estimate_note")
         if isinstance(note, str) and note:
@@ -1065,6 +1141,7 @@ def _rollup_usage(rows: list[dict[str, object]]) -> UsageRollup:
     rolled.estimated_rows = token_estimate_rows
     rolled.provider_reported_usd = provider_cost
     rolled.provider_reported_rows = provider_cost_rows
+    rolled.cost_in_usd_ticks = provider_ticks
     rolled.notes = notes
     return rolled
 

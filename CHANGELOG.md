@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.4] - 2026-10-17
+
+- `unsupported_availability_claim` also flags a calendar date ("el 20 de octubre", "el 22", `dd/mm`), a confirmation ("agendé", "agendada", "te reservé", "confirmado"), and an English slot ("opening", "book you", "available", "3 pm", "10am", "Tuesday"). A negation ("no puedo", "no tengo", "I can't", "we don't have") or a general office range ("de lunes a viernes") does not count. False negatives and false positives remain possible.
+- `provider_reported_usd` is omitted unless `usage.cost_in_usd_ticks` is an integer tick count (1 tick = 1e-10 USD). A tokens×price figure, `usage.cost`, or a dollar amount copied into that field stays in `estimated_usd` only. The rollup reads the raw tick count, not a pre-filled dollar field.
+
 ## [0.1.3] - 2026-10-17
 
 - `unsupported_availability_claim` is a wider heuristic: clock times, "N hs", "N horas", "a las N", Spanish hour words, and a weekday or "hoy"/"mañana" together with an offer. It fires only when that turn did not call a calendar or availability tool. It can miss a paraphrase and does not replace a human review.
