@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.3] - 2026-10-17
+
+- `unsupported_availability_claim` is a wider heuristic: clock times, "N hs", "N horas", "a las N", Spanish hour words, and a weekday or "hoy"/"mañana" together with an offer. It fires only when that turn did not call a calendar or availability tool. It can miss a paraphrase and does not replace a human review.
+- `cost.estimated_usd` is tokens times the env price (`cost_basis`: `tokens_x_price, cached tokens priced separately`). `provider_reported_usd` is written only when the response includes `usage.cost_in_usd_ticks` (1 tick = 1e-10 USD).
+
 ## [0.1.2] - 2026-10-17
 
 - Live results label each stage `real` or `stub`. The title `Measured with real providers` is used only when speech, language, and synthesis are all real. Stub timings stay out of the end-to-end summary.

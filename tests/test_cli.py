@@ -99,8 +99,12 @@ def test_live_command_prints_a_measured_run(
         return {
             "title": "Measured with real providers",
             "turns": [{}],
-            "estimated_usd": 0.01,
             "price_date": "2026-10-17",
+            "cost": {
+                "precall_estimate_usd": 0.02,
+                "estimated_usd": 0.01,
+                "cost_basis": "tokens_x_price, cached tokens priced separately",
+            },
             "invariants": {"passed": True, "failures": []},
         }
 
@@ -109,6 +113,9 @@ def test_live_command_prints_a_measured_run(
     captured = capsys.readouterr().out
     assert "Measured with real providers" in captured
     assert "README table" in captured
+    assert "precall_estimate_usd=0.02" in captured
+    assert "estimated_usd=0.01" in captured
+    assert "cost_basis=tokens_x_price, cached tokens priced separately" in captured
 
     def fail_run(env: object, output: Path) -> dict[str, object]:
         del env, output

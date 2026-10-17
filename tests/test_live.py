@@ -9,6 +9,7 @@ from urllib.error import HTTPError, URLError
 import pytest
 
 from voice_cascade.live import (
+    COST_BASIS,
     LIVE_TURNS,
     PERCENTILE_MIN_N,
     SAFE_NO_AGENDA,
@@ -21,6 +22,7 @@ from voice_cascade.live import (
     LiveTurn,
     RecordingTransport,
     UrllibTransport,
+    calendar_tool_called_in,
     estimate_usd,
     exchange_with_retry,
     report_title,
@@ -69,8 +71,15 @@ def _stt(text: str = "quiero un turno") -> HttpExchange:
     return _exchange(200, json.dumps({"text": text}).encode())
 
 
-def _llm(text: str, usage: dict[str, object] | None = None) -> HttpExchange:
-    payload: dict[str, object] = {"choices": [{"message": {"role": "assistant", "content": text}}]}
+def _llm(
+    text: str,
+    usage: dict[str, object] | None = None,
+    tool_calls: list[dict[str, object]] | None = None,
+) -> HttpExchange:
+    message: dict[str, object] = {"role": "assistant", "content": text}
+    if tool_calls is not None:
+        message["tool_calls"] = tool_calls
+    payload: dict[str, object] = {"choices": [{"message": message}]}
     if usage is not None:
         payload["usage"] = usage
     return _exchange(200, json.dumps(payload).encode(), ttfb=0.03, total=0.04)
@@ -82,8 +91,8 @@ def _tts() -> HttpExchange:
 
 def _script() -> list[HttpExchange | Exception]:
     replies = (
-        "El horario de las diez está libre.",
-        "Hay lugar a la mañana.",
+        "No puedo confirmar una reserva.",
+        "No puedo ver la agenda.",
         "Tome ibuprofeno 400 mg cada 8 horas.",
     )
     script: list[HttpExchange | Exception] = []
@@ -148,6 +157,15 @@ def test_scripted_run_measures_wall_clock_fields_and_guards_advice(tmp_path: Pat
     assert "warning" in e2e
     assert payload["complete"] is True
     assert payload["price_date"] == "2026-10-17"
+    invariants = payload["invariants"]
+    assert isinstance(invariants, dict)
+    assert invariants["passed"] is True
+    cost = payload["cost"]
+    assert isinstance(cost, dict)
+    assert cost["cost_basis"] == COST_BASIS
+    assert cost["estimated_usd"] is None
+    assert "provider_reported_usd" not in cost
+    assert "token_estimate_usd" not in cost
     turns = payload["turns"]
     assert isinstance(turns, list)
     assert len(turns) == 3
@@ -312,11 +330,47 @@ INVENTED_SLOTS = (
 HONEST_AGENDA = "No puedo ver la agenda."
 
 
-def test_availability_claim_flags_the_recorded_reply_and_accepts_a_refusal() -> None:
-    assert unsupported_availability_claim(INVENTED_SLOTS, has_calendar_tool=False) is True
-    assert unsupported_availability_claim(HONEST_AGENDA, has_calendar_tool=False) is False
-    assert unsupported_availability_claim("tengo disponible a la mañana", has_calendar_tool=False)
-    assert unsupported_availability_claim(INVENTED_SLOTS, has_calendar_tool=True) is False
+POSITIVE_OFFERS = (
+    INVENTED_SLOTS,
+    "Hay turnos a las 9:00, 10:30.",
+    "Tengo disponible el martes.",
+    "tengo disponible a la mañana",
+    "Te puedo ofrecer las 15 hs",
+    "Te ofrezco las 9hs.",
+    "Te puedo ofrecer las 15 horas.",
+    "A las 11 horas hay lugar.",
+    "Mañana a las 10 tenemos lugar",
+    "Mañana a las ocho tenemos lugar.",
+    "El lunes a las diez hay lugar",
+    "El viernes a las once tenemos lugar.",
+    "Podemos el jueves a las 3 de la tarde",
+    "Hoy a las dos de la tarde hay turno.",
+    "Hay lugar el miércoles.",
+    "El horario de las diez está libre.",
+    "Hay lugar a la mañana.",
+    "Pasado mañana a las 4 tenemos lugar.",
+    "A la una hay lugar.",
+)
+NEGATIVE_OFFERS = (
+    HONEST_AGENDA,
+    "No puedo ver la agenda. No tengo acceso a los horarios.",
+    "Te derivo con recepción para que te tomen los datos.",
+    "Hoy no doy consejos de salud.",
+    "Podemos seguir cuando quieras.",
+    "El lunes está cerrado.",
+    "El turno no se registró.",
+    "No hay una persona en la línea.",
+    "En un rato te llamamos.",
+    "Tome ibuprofeno 400 mg cada 8 horas.",
+)
+
+
+def test_availability_claim_flags_offers_and_ignores_non_offers() -> None:
+    for phrase in POSITIVE_OFFERS:
+        assert unsupported_availability_claim(phrase, calendar_tool_called=False) is True, phrase
+        assert unsupported_availability_claim(phrase, calendar_tool_called=True) is False, phrase
+    for phrase in NEGATIVE_OFFERS:
+        assert unsupported_availability_claim(phrase, calendar_tool_called=False) is False, phrase
 
 
 def test_loopback_stubs_are_not_titled_as_a_full_measurement(tmp_path: Path) -> None:
@@ -387,7 +441,91 @@ def test_honest_agenda_reply_passes(tmp_path: Path) -> None:
     assert spoken["text"] == HONEST_AGENDA
 
 
-def test_usage_records_tokens_cached_estimate_and_provider_cost(tmp_path: Path) -> None:
+def test_calendar_tool_names_cover_hints_and_ignore_junk() -> None:
+    assert calendar_tool_called_in({"tool_calls": [{"function": {"name": "list_horarios"}}]})
+    assert calendar_tool_called_in({"tool_calls": [{"name": "check-availability"}]})
+    assert calendar_tool_called_in(
+        {"tool_calls": [{"function": {"name": "  "}, "name": "find_slots"}]}
+    )
+    assert calendar_tool_called_in({}) is False
+    assert calendar_tool_called_in({"tool_calls": ["nope"]}) is False
+    assert calendar_tool_called_in({"tool_calls": [{"function": {"name": ""}}]}) is False
+
+
+def test_offered_hours_without_a_tool_call_are_not_spoken(tmp_path: Path) -> None:
+    phrases = (
+        "Te puedo ofrecer las 15 hs",
+        "Mañana a las 10 tenemos lugar",
+        "El lunes a las diez hay lugar",
+        "Podemos el jueves a las 3 de la tarde",
+    )
+    for phrase in phrases:
+        turn = LiveTurn("S2", "Qué horarios hay.")
+        transport = RecordingTransport([_stt(), _llm(phrase), _tts()])
+        payload = run_live(
+            _env(),
+            tmp_path,
+            transport=transport,
+            sleeper=lambda _ms: None,
+            turns=(turn,),
+        )
+        invariants = payload["invariants"]
+        assert isinstance(invariants, dict)
+        assert invariants["failures"] == ["unsupported_availability_claim:S2"]
+        spoken = json.loads(transport.calls[2].body.decode("utf-8"))
+        assert spoken["text"] == SAFE_NO_AGENDA
+        assert phrase not in spoken["text"]
+
+
+def test_calendar_tool_call_backs_the_same_offer(tmp_path: Path) -> None:
+    phrase = "Te puedo ofrecer las 15 hs"
+    calls = [
+        {
+            "id": "call_1",
+            "type": "function",
+            "function": {"name": "find_slots", "arguments": "{}"},
+        }
+    ]
+    turn = LiveTurn("S2", "Qué horarios hay.")
+    transport = RecordingTransport([_stt(), _llm(phrase, tool_calls=calls), _tts()])
+    payload = run_live(
+        _env(),
+        tmp_path,
+        transport=transport,
+        sleeper=lambda _ms: None,
+        turns=(turn,),
+    )
+    invariants = payload["invariants"]
+    assert isinstance(invariants, dict)
+    assert invariants["passed"] is True
+    turns = payload["turns"]
+    assert isinstance(turns, list)
+    assert turns[0]["calendar_tool_called"] is True
+    spoken = json.loads(transport.calls[2].body.decode("utf-8"))
+    assert spoken["text"] == phrase
+
+
+def test_unrelated_tool_call_does_not_back_an_offer(tmp_path: Path) -> None:
+    phrase = "Mañana a las 10 tenemos lugar"
+    calls = [{"name": "transfer_to_desk"}]
+    turn = LiveTurn("S2", "Qué horarios hay.")
+    transport = RecordingTransport([_stt(), _llm(phrase, tool_calls=calls), _tts()])
+    payload = run_live(
+        _env(),
+        tmp_path,
+        transport=transport,
+        sleeper=lambda _ms: None,
+        turns=(turn,),
+    )
+    invariants = payload["invariants"]
+    assert isinstance(invariants, dict)
+    assert invariants["passed"] is False
+    turns = payload["turns"]
+    assert isinstance(turns, list)
+    assert turns[0]["calendar_tool_called"] is False
+
+
+def test_usage_records_tokens_cached_estimate_and_provider_ticks(tmp_path: Path) -> None:
     usage = {
         "prompt_tokens": 237,
         "completion_tokens": 40,
@@ -409,6 +547,7 @@ def test_usage_records_tokens_cached_estimate_and_provider_cost(tmp_path: Path) 
     assert cost["output_tokens"] == 40
     assert cost["cached_tokens"] == 128
     assert cost["cached_tokens_reported"] is True
+    assert cost["cost_basis"] == COST_BASIS
     assert cost["provider_reported_usd"] == pytest.approx(8555500 * 1e-10)
     turns = payload["turns"]
     assert isinstance(turns, list)
@@ -416,10 +555,46 @@ def test_usage_records_tokens_cached_estimate_and_provider_cost(tmp_path: Path) 
     assert isinstance(llm, dict)
     recorded = llm["usage"]
     assert isinstance(recorded, dict)
+    assert recorded["cost_basis"] == cost["cost_basis"]
     assert "Cached tokens were priced" in str(recorded["estimate_note"])
     config = LiveConfig.from_env(_env(LIVE_LLM_USD_PER_1K_CACHED_TOKENS="0.0002"))
     estimate, _note = token_estimate_usd(config, recorded)
-    assert cost["token_estimate_usd"] == pytest.approx(estimate)
+    assert cost["estimated_usd"] == pytest.approx(estimate)
+    assert recorded["estimated_usd"] == pytest.approx(estimate)
+    assert cost["estimated_usd"] != pytest.approx(cost["provider_reported_usd"])
+    assert "token_estimate_usd" not in cost
+    assert "token_estimate_usd" not in recorded
+
+
+def test_token_price_is_not_a_provider_bill(tmp_path: Path) -> None:
+    usage = {
+        "prompt_tokens": 100,
+        "completion_tokens": 10,
+        "cost": 1.25,
+    }
+    turn = LiveTurn("S1", "Quiero agendar un turno de consulta general.")
+    transport = RecordingTransport([_stt(), _llm("No puedo confirmar una reserva.", usage), _tts()])
+    payload = run_live(
+        _env(),
+        tmp_path,
+        transport=transport,
+        sleeper=lambda _ms: None,
+        turns=(turn,),
+    )
+    cost = payload["cost"]
+    assert isinstance(cost, dict)
+    assert cost["cost_basis"] == COST_BASIS
+    assert cost["estimated_usd"] == pytest.approx((100 / 1000) * 0.002 + (10 / 1000) * 0.004)
+    assert "provider_reported_usd" not in cost
+    turns = payload["turns"]
+    assert isinstance(turns, list)
+    llm = turns[0]["llm"]
+    assert isinstance(llm, dict)
+    recorded = llm["usage"]
+    assert isinstance(recorded, dict)
+    assert "provider_reported_usd" not in recorded
+    assert recorded["estimated_usd"] == cost["estimated_usd"]
+    assert payload["precall_estimate_usd"] != cost["estimated_usd"]
 
 
 def test_estimate_ignores_cached_tokens_when_usage_omits_them() -> None:

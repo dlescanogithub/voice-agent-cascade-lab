@@ -36,7 +36,7 @@ sequenceDiagram
 | `evalkit.py` | Invariants and the SIMULATED latency budget. |
 | `scenarios.py` | 49 synthetic calls. |
 | `providers.py` | Refuse-only flags. They raise and do not send. |
-| `live.py` | Optional wall-clock measurement. Off unless `LIVE_MODE=1`. |
+| `live.py` | Optional wall-clock measurement. Off unless `LIVE_MODE=1`. Availability check is a heuristic. `cost.estimated_usd` is tokens times env price. |
 | `pii.py`, `logging_setup.py`, `trace.py` | Redaction, JSON logs, JSONL traces. |
 | `secretscan.py` | CI scan. |
 

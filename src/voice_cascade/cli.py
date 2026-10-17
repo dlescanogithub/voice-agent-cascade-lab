@@ -173,9 +173,18 @@ def cmd_live(settings: Settings) -> int:
         return 1
     turns = payload.get("turns")
     count = len(turns) if isinstance(turns, list) else 0
+    cost = payload.get("cost")
+    precall = payload.get("precall_estimate_usd")
+    estimated: object = None
+    basis: object = None
+    if isinstance(cost, dict):
+        precall = cost.get("precall_estimate_usd", precall)
+        estimated = cost.get("estimated_usd")
+        basis = cost.get("cost_basis")
     print(
         f"{payload.get('title', 'live')} "
-        f"turns={count} estimated_usd={payload.get('estimated_usd')} "
+        f"turns={count} precall_estimate_usd={precall} "
+        f"estimated_usd={estimated} cost_basis={basis} "
         f"price_date={payload.get('price_date')}"
     )
     invariants = payload.get("invariants")

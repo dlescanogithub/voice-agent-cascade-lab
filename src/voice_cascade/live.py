@@ -34,8 +34,42 @@ RETRY_STATUSES = frozenset({429, 500, 502, 503})
 CHARS_PER_TOKEN_DEFAULT = 4  # [EST]
 PERCENTILE_MIN_N = 20
 USD_TICKS = 1e-10
+COST_BASIS = "tokens_x_price, cached tokens priced separately"
 LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "0.0.0.0"})
+_HOUR_WORD = r"una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce"
 _CLOCK_TIME = re.compile(r"\b(?:[01]?\d|2[0-3])[:.][0-5]\d\b")
+_HS_TIME = re.compile(r"\b\d{1,2}\s*hs\b")
+_HORAS_TIME = re.compile(r"(?<!cada )\b\d{1,2}\s+horas?\b")
+_A_LAS_NUM = re.compile(r"\ba las\s+\d{1,2}\b")
+_LAS_WORD = re.compile(rf"\blas\s+(?:{_HOUR_WORD})\b")
+_A_LA_UNA = re.compile(r"\ba la una\b")
+_DAY_PERIOD = re.compile(
+    rf"\b(?:{_HOUR_WORD}|\d{{1,2}})\s+de la\s+(?:tarde|manana|noche|madrugada)\b"
+)
+_DAY = re.compile(r"\b(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo|hoy|manana)\b")
+_OFFER = re.compile(
+    r"\b(?:ofrec\w*|podemos|disponible\w*|turno\w*)\b|tenemos lugar|hay lugar|hay turnos?\b"
+)
+_TIME_PATTERNS = (
+    _CLOCK_TIME,
+    _HS_TIME,
+    _HORAS_TIME,
+    _A_LAS_NUM,
+    _LAS_WORD,
+    _A_LA_UNA,
+    _DAY_PERIOD,
+)
+_CALENDAR_TOOLS = frozenset(
+    {
+        "find_slots",
+        "book_appointment",
+        "cancel_appointment",
+        "check_availability",
+        "get_availability",
+        "availability",
+    }
+)
+_CALENDAR_HINTS = ("slot", "agenda", "avail", "horario")
 
 SYSTEM_PROMPT = (
     "Sos el coordinador de turnos de Clínica Aurora. "
@@ -297,15 +331,48 @@ def report_title(stt_source: str, llm_source: str, tts_source: str) -> str:
     return "Partially measured: " + ", ".join(parts)
 
 
-def unsupported_availability_claim(text: str, *, has_calendar_tool: bool) -> bool:
-    """True when a reply states concrete slots and no calendar tool was available."""
+def unsupported_availability_claim(text: str, *, calendar_tool_called: bool) -> bool:
+    """Heuristic. True when the reply offers a slot and this turn called no calendar tool.
 
-    if has_calendar_tool:
+    A clock time, "N hs", "N horas", "a las N", or a Spanish hour ("diez", "tres de la
+    tarde") is enough. "cada N horas" is left alone (a dose interval, not a slot).
+    A weekday, "hoy", or "mañana" counts only together with an offer ("ofrecer",
+    "tenemos lugar", "hay lugar", "podemos", "disponible", "turno"). Paraphrases can
+    slip through. This does not replace a human read of the transcript.
+    """
+
+    if calendar_tool_called:
         return False
     folded = fold(text)
-    if "tengo disponible" in folded:
+    if any(pattern.search(folded) for pattern in _TIME_PATTERNS):
         return True
-    return _CLOCK_TIME.search(text) is not None or _CLOCK_TIME.search(folded) is not None
+    return _DAY.search(folded) is not None and _OFFER.search(folded) is not None
+
+
+def calendar_tool_called_in(message: Mapping[str, object]) -> bool:
+    """True when this turn's message lists a calendar or availability tool call."""
+
+    calls = message.get("tool_calls")
+    if not isinstance(calls, list):
+        return False
+    return any(isinstance(call, dict) and _is_calendar_tool(_tool_name(call)) for call in calls)
+
+
+def _tool_name(call: Mapping[str, object]) -> str:
+    function = call.get("function")
+    if isinstance(function, dict):
+        name = function.get("name")
+        if isinstance(name, str) and name.strip():
+            return name
+    name = call.get("name")
+    return name if isinstance(name, str) else ""
+
+
+def _is_calendar_tool(name: str) -> bool:
+    folded = fold(name).replace("-", "_")
+    if folded in _CALENDAR_TOOLS:
+        return True
+    return any(hint in folded for hint in _CALENDAR_HINTS)
 
 
 def summarize_ms(values: list[float], *, allow_percentiles: bool) -> dict[str, object]:
@@ -583,7 +650,7 @@ def _usage_from_body(payload: Mapping[str, object]) -> dict[str, object]:
             "output_tokens": None,
             "cached_tokens": None,
             "cached_tokens_reported": False,
-            "provider_cost_usd": None,
+            "cost_basis": COST_BASIS,
             "estimate_note": UNCACHED_ESTIMATE_NOTE,
         }
     cached: int | None = None
@@ -595,20 +662,18 @@ def _usage_from_body(payload: Mapping[str, object]) -> dict[str, object]:
     elif "cached_tokens" in raw:
         cached = _as_int(raw.get("cached_tokens"))
         cached_reported = True
-    provider_cost: float | None = None
-    ticks = raw.get("cost_in_usd_ticks")
-    if isinstance(ticks, int | float) and not isinstance(ticks, bool):
-        provider_cost = float(ticks) * USD_TICKS
-    elif isinstance(raw.get("cost"), int | float) and not isinstance(raw.get("cost"), bool):
-        provider_cost = float(cast(int | float, raw.get("cost")))
-    return {
+    usage: dict[str, object] = {
         "input_tokens": _as_int(raw.get("prompt_tokens")),
         "output_tokens": _as_int(raw.get("completion_tokens")),
         "cached_tokens": cached,
         "cached_tokens_reported": cached_reported,
-        "provider_cost_usd": provider_cost,
+        "cost_basis": COST_BASIS,
         "estimate_note": UNCACHED_ESTIMATE_NOTE,
     }
+    ticks = raw.get("cost_in_usd_ticks")
+    if isinstance(ticks, int | float) and not isinstance(ticks, bool):
+        usage["provider_reported_usd"] = round(float(ticks) * USD_TICKS, 10)
+    return usage
 
 
 def token_estimate_usd(
@@ -645,10 +710,12 @@ def token_estimate_usd(
     )
 
 
-def _spoken_text(model_text: str) -> tuple[str, bool, bool]:
+def _spoken_text(model_text: str, *, calendar_tool_called: bool) -> tuple[str, bool, bool]:
     """Return text to synthesize, whether the clinical guard fired, and the slot invariant."""
 
-    availability = unsupported_availability_claim(model_text, has_calendar_tool=False)
+    availability = unsupported_availability_claim(
+        model_text, calendar_tool_called=calendar_tool_called
+    )
     if contains_clinical_advice(model_text):
         return SAFE_CLINICAL, True, availability
     if availability:
@@ -709,12 +776,15 @@ def run_turn(
     if llm.status != 200:
         raise LiveRequestError(f"{turn.turn_id} language call status {llm.status}")
     llm_payload = _object(llm.body)
-    reply = _message_text(llm_payload)
+    message = _assistant_message(llm_payload)
+    reply = _message_content(message)
+    backed = calendar_tool_called_in(message)
     usage = _usage_from_body(llm_payload)
     token_usd, estimate_note = token_estimate_usd(config, usage)
-    usage["token_estimate_usd"] = None if token_usd is None else round(token_usd, 8)
+    usage["estimated_usd"] = None if token_usd is None else round(token_usd, 8)
+    usage["cost_basis"] = COST_BASIS
     usage["estimate_note"] = estimate_note
-    spoken, clinical_replaced, availability_claim = _spoken_text(reply)
+    spoken, clinical_replaced, availability_claim = _spoken_text(reply, calendar_tool_called=backed)
     tts_request = HttpRequest(
         "POST",
         _join(config.tts_base_url, f"v1/text-to-speech/{config.tts_voice_id}"),
@@ -758,6 +828,7 @@ def run_turn(
         "vad": _unmeasured("vad"),
         "tool": _unmeasured("tool"),
         "clinical_guard_replaced": clinical_replaced,
+        "calendar_tool_called": backed,
         "unsupported_availability_claim": availability_claim,
     }
     return record, tts.body
@@ -779,7 +850,7 @@ def _unmeasured(stage: str) -> dict[str, object]:
     }
 
 
-def _message_text(payload: Mapping[str, object]) -> str:
+def _assistant_message(payload: Mapping[str, object]) -> dict[str, object]:
     choices = payload.get("choices")
     if not isinstance(choices, list) or not choices:
         raise LiveRequestError("language response had no choices")
@@ -789,6 +860,10 @@ def _message_text(payload: Mapping[str, object]) -> str:
     message = first.get("message")
     if not isinstance(message, dict):
         raise LiveRequestError("language response had no message")
+    return {str(key): value for key, value in message.items()}
+
+
+def _message_content(message: Mapping[str, object]) -> str:
     content = message.get("content")
     if not isinstance(content, str) or content.strip() == "":
         raise LiveRequestError("language response had no content")
@@ -865,15 +940,29 @@ def _report(
     output_tokens = rolled.output_tokens
     cached_tokens = rolled.cached_tokens
     cached_reported = rolled.cached_tokens_reported
-    token_estimate = rolled.token_estimate_usd
-    token_estimate_rows = rolled.token_estimate_rows
-    provider_cost = rolled.provider_cost_usd
-    provider_cost_rows = rolled.provider_cost_rows
+    token_estimate = rolled.estimated_usd
+    token_estimate_rows = rolled.estimated_rows
+    provider_cost = rolled.provider_reported_usd
+    provider_cost_rows = rolled.provider_reported_rows
     notes = rolled.notes
+    cost: dict[str, object] = {
+        "precall_estimate_usd": round(precall_estimate, 6),
+        "estimated_usd": round(token_estimate, 8) if token_estimate_rows else None,
+        "cost_basis": COST_BASIS,
+        "estimated_rows": token_estimate_rows,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "cached_tokens": cached_tokens,
+        "cached_tokens_reported": cached_reported,
+        "estimate_note": " ".join(dict.fromkeys(notes)) if notes else UNCACHED_ESTIMATE_NOTE,
+    }
+    if provider_cost_rows:
+        cost["provider_reported_usd"] = round(provider_cost, 10)
+        cost["provider_reported_rows"] = provider_cost_rows
     return {
         "title": report_title(config.stt_source, config.llm_source, config.tts_source),
         "price_date": config.price_date,
-        "estimated_usd": round(precall_estimate, 6),
+        "precall_estimate_usd": round(precall_estimate, 6),
         "max_spend_usd": config.max_spend_usd,
         "chars_per_token_est": config.chars_per_token,
         "percentile_min_n": PERCENTILE_MIN_N,
@@ -900,18 +989,7 @@ def _report(
             "tts": summarize_ms(by_stage["tts"], allow_percentiles=config.tts_source == "real"),
         },
         "invariants": {"passed": not failures, "failures": failures},
-        "cost": {
-            "precall_estimate_usd": round(precall_estimate, 6),
-            "token_estimate_usd": round(token_estimate, 8) if token_estimate_rows else None,
-            "token_estimate_rows": token_estimate_rows,
-            "provider_reported_usd": round(provider_cost, 10) if provider_cost_rows else None,
-            "provider_reported_rows": provider_cost_rows,
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "cached_tokens": cached_tokens,
-            "cached_tokens_reported": cached_reported,
-            "estimate_note": " ".join(dict.fromkeys(notes)) if notes else UNCACHED_ESTIMATE_NOTE,
-        },
+        "cost": cost,
         "turns": rows,
         "complete": len(rows) == len(turns),
     }
@@ -932,10 +1010,10 @@ class UsageRollup:
     output_tokens: int = 0
     cached_tokens: int = 0
     cached_tokens_reported: bool = False
-    token_estimate_usd: float = 0.0
-    token_estimate_rows: int = 0
-    provider_cost_usd: float = 0.0
-    provider_cost_rows: int = 0
+    estimated_usd: float = 0.0
+    estimated_rows: int = 0
+    provider_reported_usd: float = 0.0
+    provider_reported_rows: int = 0
     notes: list[str] = field(default_factory=list)
 
 
@@ -968,11 +1046,11 @@ def _rollup_usage(rows: list[dict[str, object]]) -> UsageRollup:
             cached = usage.get("cached_tokens")
             if isinstance(cached, int):
                 cached_tokens += cached
-        estimate = usage.get("token_estimate_usd")
+        estimate = usage.get("estimated_usd")
         if isinstance(estimate, int | float) and not isinstance(estimate, bool):
             token_estimate += float(estimate)
             token_estimate_rows += 1
-        reported = usage.get("provider_cost_usd")
+        reported = usage.get("provider_reported_usd")
         if isinstance(reported, int | float) and not isinstance(reported, bool):
             provider_cost += float(reported)
             provider_cost_rows += 1
@@ -983,10 +1061,10 @@ def _rollup_usage(rows: list[dict[str, object]]) -> UsageRollup:
     rolled.output_tokens = output_tokens
     rolled.cached_tokens = cached_tokens
     rolled.cached_tokens_reported = cached_reported
-    rolled.token_estimate_usd = token_estimate
-    rolled.token_estimate_rows = token_estimate_rows
-    rolled.provider_cost_usd = provider_cost
-    rolled.provider_cost_rows = provider_cost_rows
+    rolled.estimated_usd = token_estimate
+    rolled.estimated_rows = token_estimate_rows
+    rolled.provider_reported_usd = provider_cost
+    rolled.provider_reported_rows = provider_cost_rows
     rolled.notes = notes
     return rolled
 
