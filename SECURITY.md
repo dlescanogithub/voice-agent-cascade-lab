@@ -24,7 +24,7 @@ Email the maintainer privately. Do not open a public issue that contains keys, t
 
 Configuration is environment variables only. The process does not read a `.env` file. `.env.example` has empty placeholders. The demo HMAC string `local-demo-not-a-secret` is a lab constant, not a credential. Do not reuse it anywhere except this local demo.
 
-Real-provider flags default off. The stubs raise before any network call, including when a key is present. Do not point them at a vendor; there is no HTTP client in those stubs.
+Refuse-only flags default off and raise before any network call. The optional live command is a separate path. It stays off unless `LIVE_MODE=1`, reads keys only from the environment, and exits 2 with no request when config is missing or the pre-call estimate exceeds `MAX_LIVE_SPEND_USD`. CI does not set `LIVE_MODE`. Tests use a fake HTTP layer and do not open a socket. Do not commit keys. Do not put keys in `var/`, and do not paste them into the README table.
 
 ## Data
 

@@ -12,7 +12,7 @@ Imaginá un restaurante que toma reservas solo por teléfono.
 4. Anota la reserva en el libro. Si el lápiz se traba y prueba de nuevo, no puede escribir la misma mesa dos veces. Eso es el **webhook con idempotencia**.
 5. Empieza a repetir la confirmación en voz alta. Si el cliente lo interrumpe, el mozo se calla. Si se calla porque pasó un camión, cortó al pedo. Eso es el **barge-in** y el falso corte.
 
-El laboratorio mide esos cinco tiempos con un reloj de mentira, siempre igual, para poder comparar perfiles sin un proveedor pago.
+El laboratorio mide esos cinco tiempos con un reloj de mentira. Cada espera sale de una lognormal con semilla (los parámetros están marcados [EST] en el código). No es la latencia de un proveedor pago. La compuerta mira el presupuesto; los números son un marcador de posición.
 
 ## La cascada, en una frase
 
@@ -49,7 +49,7 @@ Si el lápiz ni siquiera tocó el papel (timeout antes de escribir) y los reinte
 | VAD | Regla que dice "esto es habla" y "ya se calló". |
 | Barge-in | La persona habla mientras el sistema todavía está "hablando", y hay que cortar. |
 | Falso corte | Un ruido que el VAD tomó por habla y cortó la frase al pedo. |
-| TTFT / TTFB | Tiempo hasta el primer token del modelo, o hasta el primer byte de audio. Acá son constantes simuladas. |
+| TTFT / TTFB | Tiempo hasta el primer token del modelo, o hasta el primer byte de audio. En el eval son sorteos **SIMULATED** con semilla, no un reloj de pared. |
 | Cassette | Respuesta fija según la intención. No es un modelo entrenado. |
 | Idempotencia | Misma clave, mismo resultado, un solo efecto. |
 | DLQ | Cola de lo que no se pudo confirmar después de los reintentos. |
@@ -57,7 +57,7 @@ Si el lápiz ni siquiera tocó el papel (timeout antes de escribir) y los reinte
 
 ## Límites honestos
 
-- No mide proveedores reales. La tabla del README dice **none yet** y tiene que seguir así hasta que alguien corra un proveedor de verdad y anote el comando.
+- No mide proveedores en CI. La tabla "Measured with real providers" del README queda vacía hasta que el dueño corra `python -m voice_cascade live` en su máquina y pegue las filas. Si falta configuración, o si la estimación pasa `MAX_LIVE_SPEND_USD`, el proceso sale con código 2 y no manda ningún request.
 - El "LLM" no elige el id del turno leyendo la frase. Lo pone el guion.
 - El VAD es un umbral de energía sobre frames sintéticos, no una red neuronal.
 - No hay WebRTC, ni SIP, ni consentimiento de grabación, ni varios idiomas.

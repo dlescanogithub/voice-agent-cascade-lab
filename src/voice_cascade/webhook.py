@@ -6,7 +6,7 @@ import hashlib
 import hmac
 import json
 import random
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -17,6 +17,7 @@ from voice_cascade.clock import SimulatedClock
 from voice_cascade.config import Settings
 
 SERVICE = "consulta_general"
+ElapsedFor = Callable[[dict[str, object]], int]
 
 
 def canonical_json(payload: Mapping[str, object]) -> bytes:
@@ -161,11 +162,13 @@ class WebhookClient:
         clock: SimulatedClock,
         dlq: JsonlDeadLetterQueue,
         settings: Settings,
+        elapsed_for: ElapsedFor | None = None,
     ) -> None:
         self.transport = transport
         self.clock = clock
         self.dlq = dlq
         self.settings = settings
+        self.elapsed_for = elapsed_for
 
     def invoke(
         self, envelope: dict[str, object], fault: FaultPlan | None = None
@@ -192,6 +195,8 @@ class WebhookClient:
                 status, payload, elapsed = self.transport.deliver(
                     body, signature, self.settings.timeout_ms
                 )
+                if self.elapsed_for is not None and status == 200:
+                    elapsed = self.elapsed_for(payload)
                 if mode == "slow_after_commit":
                     self.clock.advance(self.settings.timeout_ms)
                     last_error = "timeout"

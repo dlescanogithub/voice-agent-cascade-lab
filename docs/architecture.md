@@ -31,16 +31,18 @@ sequenceDiagram
 | `tts.py` | Chunks, TTFB, cancel. |
 | `booking.py` | SQLite slots, one active booking per slot, idempotency table. |
 | `webhook.py` | HMAC, client retries, faults, JSONL DLQ, optional HTTP server. |
-| `pipeline.py` | One call on `SimulatedClock`. |
-| `evalkit.py` | Invariants. |
+| `latency.py` | Seeded lognormal draws for the simulated clock. Parameters are [EST]. |
+| `pipeline.py` | One call on `SimulatedClock`, with sampled stage times. |
+| `evalkit.py` | Invariants and the SIMULATED latency budget. |
 | `scenarios.py` | 49 synthetic calls. |
-| `providers.py` | Real adapters that raise and do not send. |
+| `providers.py` | Refuse-only flags. They raise and do not send. |
+| `live.py` | Optional wall-clock measurement. Off unless `LIVE_MODE=1`. |
 | `pii.py`, `logging_setup.py`, `trace.py` | Redaction, JSON logs, JSONL traces. |
 | `secretscan.py` | CI scan. |
 
 ## Clock
 
-`SimulatedClock` starts at 0 for each call. The pipeline advances it by the VAD endpoint, the STT final, the LLM TTFT, whatever the webhook client consumed, and the TTS time to first byte. Barge-in latency is recorded beside that sum. It is the time to reach `min_speech_ms`, and it does not change the end-to-end number.
+`SimulatedClock` starts at 0 for each call. The pipeline advances it by a seeded draw for the VAD charge (median = the profile end-silence), the STT final, the LLM first token, whatever the webhook client consumed, and the TTS time to first byte. Turn-taking still uses the thresholds, not the draw. Barge-in latency is recorded beside that sum. It is the time to reach `min_speech_ms`, and it does not change the end-to-end number. The numbers are SIMULATED.
 
 ## Why the tool arguments are not "from the model"
 

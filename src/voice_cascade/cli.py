@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from dataclasses import replace
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from voice_cascade.booking import BookingStore
 from voice_cascade.clock import SimulatedClock
 from voice_cascade.config import Settings
 from voice_cascade.evalkit import EvalReport, evaluate
+from voice_cascade.live import LiveConfigError, LiveRequestError, run_live
 from voice_cascade.logging_setup import configure_logging
 from voice_cascade.pipeline import SuiteResult, run_suite
 from voice_cascade.scenarios import build_scenarios
@@ -29,10 +31,12 @@ from voice_cascade.webhook import (
 
 def _print_report(report: EvalReport, result: SuiteResult) -> None:
     print(
-        f"profile={result.profile} scenarios={len(result.runs)} simulated=true version={__version__}"
+        "SIMULATED latency report "
+        f"profile={result.profile} scenarios={len(result.runs)} "
+        f"simulated=true version={__version__}"
     )
     for stage, stats in report.latency.items():
-        print(f"{stage}: p50={_fmt(stats.p50)} p95={_fmt(stats.p95)} n={stats.n} (simulated ms)")
+        print(f"{stage}: p50={_fmt(stats.p50)} p95={_fmt(stats.p95)} n={stats.n} (SIMULATED ms)")
     print(
         "rates "
         f"false_cut={report.false_cut_rate:.3f} "
@@ -96,6 +100,9 @@ def cmd_regression(settings: Settings) -> int:
 
 def cmd_latency_report(settings: Settings) -> int:
     scenarios = build_scenarios()
+    print(
+        "SIMULATED latency report (seeded lognormal clock; placeholders until a real-provider run)"
+    )
     for name in PROFILES:
         result = run_suite(
             scenarios,
@@ -114,7 +121,7 @@ def cmd_latency_report(settings: Settings) -> int:
             f"missed_barge_in={report.missed_barge_in_rate:.3f} "
             f"premature={report.premature_rate:.3f} "
             f"gate={'pass' if gated.passed else 'fail'} "
-            "(simulated)"
+            "(SIMULATED)"
         )
     return 0
 
@@ -155,6 +162,27 @@ def cmd_dlq_replay(settings: Settings, dlq_path: Path, db_path: Path) -> int:
     return 0 if left == 0 else 1
 
 
+def cmd_live(settings: Settings) -> int:
+    try:
+        payload = run_live(os.environ, Path(settings.data_dir) / "live")
+    except LiveConfigError as exc:
+        print(f"live: {exc}")
+        return 2
+    except LiveRequestError as exc:
+        print(f"live: {exc}")
+        return 1
+    turns = payload.get("turns")
+    count = len(turns) if isinstance(turns, list) else 0
+    print(
+        "Measured with real providers "
+        f"turns={count} estimated_usd={payload.get('estimated_usd')} "
+        f"price_date={payload.get('price_date')}"
+    )
+    print(f"wrote {Path(settings.data_dir) / 'live' / 'results.json'}")
+    print("README table 'Measured with real providers' is not updated by this command.")
+    return 0
+
+
 def cmd_secretscan(root: Path) -> int:
     findings = scan_path(root)
     if findings:
@@ -180,6 +208,10 @@ def build_parser() -> argparse.ArgumentParser:
     replay.add_argument("--db", required=True)
     scan = sub.add_parser("secretscan", help="scan a tree for committed secrets")
     scan.add_argument("path", nargs="?", default=".")
+    sub.add_parser(
+        "live",
+        help="optional real-provider measurement; off unless LIVE_MODE=1; not for CI",
+    )
     serve_parser = sub.add_parser("webhook-serve", help="serve the tool webhook on localhost")
     serve_parser.add_argument("--host", default="127.0.0.1")
     serve_parser.add_argument("--port", type=int, default=8765)
@@ -204,6 +236,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_dlq_replay(settings, Path(str(args.dlq)), Path(str(args.db)))
     if command == "secretscan":
         return cmd_secretscan(Path(str(args.path)))
+    if command == "live":
+        return cmd_live(settings)
     if command == "webhook-serve":
         data = Path(settings.data_dir) / "serve"
         store = BookingStore(data / "clinic.sqlite")

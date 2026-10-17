@@ -29,6 +29,7 @@ def test_cli_gate_demo_and_report(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     report = json.loads((tmp_path / "reports" / "eval.json").read_text(encoding="utf-8"))
     assert report["passed"] is True
     assert report["simulated"] is True
+    assert report["title"] == "SIMULATED latency report"
     assert main(["eval", "--profile", "patient"]) == 0
     assert main(["eval", "--profile", "aggressive"]) == 1
     assert main(["eval-regression"]) == 1
@@ -80,6 +81,37 @@ def test_cli_dlq_replay_and_serve(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 
 def test_module_entrypoint_is_importable() -> None:
     assert callable(entrypoint.main)
+
+
+def test_live_without_config_exits_before_any_request(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("LIVE_MODE", raising=False)
+    assert main(["live"]) == 2
+
+
+def test_live_command_prints_a_measured_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("VOICE_CASCADE_DATA_DIR", str(tmp_path))
+
+    def fake_run(env: object, output: Path) -> dict[str, object]:
+        del env
+        assert output == tmp_path / "live"
+        return {"turns": [{}], "estimated_usd": 0.01, "price_date": "2026-10-17"}
+
+    monkeypatch.setattr("voice_cascade.cli.run_live", fake_run)
+    assert main(["live"]) == 0
+    captured = capsys.readouterr().out
+    assert "Measured with real providers" in captured
+    assert "README table" in captured
+
+    def fail_run(env: object, output: Path) -> dict[str, object]:
+        del env, output
+        from voice_cascade.live import LiveRequestError
+
+        raise LiveRequestError("gave up")
+
+    monkeypatch.setattr("voice_cascade.cli.run_live", fail_run)
+    assert main(["live"]) == 1
 
 
 def test_cli_requires_a_command() -> None:

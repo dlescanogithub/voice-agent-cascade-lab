@@ -4,20 +4,23 @@ from pathlib import Path
 
 BANNED = ("enda" + "va", "rel" + "ias", "fan " + "universe")
 MEASURED_PHRASES = (
-    "Measured: 2026-10-17",
+    "SIMULATED placeholder, 2026-10-17",
     "python -m voice_cascade eval",
-    "p95 end-to-end: 950 ms (simulated)",
-    "p50 end-to-end: 860 ms (simulated)",
-    "false-cut rate (aggressive, simulated): 1.0",
-    "false-cut rate (balanced, simulated): 0.0",
-    "false-cut rate (patient, simulated): 0.0",
-    "missed eligible interruptions (balanced, simulated): 0.0",
-    "missed barge-in including sub-threshold (balanced, simulated): 0.5",
-    "premature endpoint (aggressive, simulated): 1.0",
-    "p95 end-to-end (aggressive, simulated): 730 ms",
-    "p95 end-to-end (patient, simulated): 1350 ms",
+    "python -m voice_cascade live",
+    "The harness computes and gates a latency budget.",
+    "p95 end-to-end: 1004.5 ms (SIMULATED)",
+    "p50 end-to-end: 896 ms (SIMULATED)",
+    "false-cut rate (aggressive, SIMULATED): 1.0",
+    "false-cut rate (balanced, SIMULATED): 0.0",
+    "false-cut rate (patient, SIMULATED): 0.0",
+    "missed eligible interruptions (balanced, SIMULATED): 0.0",
+    "missed barge-in including sub-threshold (balanced, SIMULATED): 0.5",
+    "premature endpoint (aggressive, SIMULATED): 1.0",
+    "p95 end-to-end (aggressive, SIMULATED): 780 ms",
+    "p95 end-to-end (patient, SIMULATED): 1413.75 ms",
     "## Use cases, governance and business strategy",
-    "Measured with real providers: none yet",
+    "### Measured with real providers",
+    "stays empty until the owner pastes",
 )
 
 

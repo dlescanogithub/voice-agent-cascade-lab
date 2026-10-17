@@ -1,29 +1,25 @@
 # Provenance
 
-The task asked for a documented copy of the eval kit in
-`https://github.com/dlescanogithub/agent-runtime-evals`, pull request #1
-(draft) on branch `cursor/agent-runtime-evals-mvp-7e58`, commit
-`55cfd4183fb2489d77fc9c8552e008274dc78f77`.
+Small utilities in this repository follow the same shape as the other labs in this portfolio. They are maintained in parallel and kept aligned. Nothing here is copied from employer or client work.
 
-## What was readable
+## Shared across the portfolio
 
-On 2026-10-17 the GitHub token available to this workspace could read
-`dlescanogithub/voice-agent-cascade-lab` and received HTTP 404 for
-`dlescanogithub/agent-runtime-evals`. A 404 on a private repository is the
-API's way of saying the token cannot see it. No file from that commit was
-downloaded. Nothing in this tree is a byte-for-byte copy.
+| Utility | Module here | Role |
+| --- | --- | --- |
+| Cassette provider | `llm.py`, `cassettes/clinic.json` | Fixed replies for scripted intents |
+| Invariant checks | `evalkit.py` | Gate on effects, not on a golden transcript |
+| JSON trace | `trace.py` | One JSON object per turn |
+| Structured logging | `logging_setup.py` | JSON logs with redaction |
+| Secret scanner | `secretscan.py` | Vendored copy, same pattern list |
 
-## What was reimplemented from the written contract
+## Adapted here
 
-| Idea in the brief | Module here |
-| --- | --- |
-| Cassette provider and fake provider | `llm.py`, `stt.py`, `tts.py`, `cassettes/clinic.json` |
-| JSONL trace | `trace.py` |
-| JSON logging | `logging_setup.py` |
-| Invariant checks, not trajectories | `evalkit.py` |
-| Secret scan | `secretscan.py` |
-| Real provider off unless an env flag is set | `providers.py`, `config.py` |
+The cascade, the three turn-taking profiles, the booking webhook, and the optional live measurement command are specific to this lab. Stage times on the simulated clock are seeded lognormal draws. The medians and sigmas are marked **[EST]** in `src/voice_cascade/latency.py`. The live command stays off unless `LIVE_MODE=1` and is not part of CI.
 
-If that repository becomes readable later, diff these modules against commit
-`55cfd4183fb2489d77fc9c8552e008274dc78f77` and replace this note with the list
-of lines that were actually copied and the list of lines that changed.
+## Vendored secret scanner
+
+`src/voice_cascade/secretscan.py` is a vendored copy kept identical across the portfolio repos. The digest below is of that file's bytes.
+
+sha256: ddcc57e54eb22c68d8c2414a573b1fdae5a8b22987cdba0ac3757e9edd690efb
+
+`make secretscan-hash` recomputes the digest and exits non-zero on a mismatch. `tests/test_secretscan.py` checks the same value.

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from voice_cascade.budget import StageBudget
 from voice_cascade.config import Settings
 from voice_cascade.evalkit import evaluate
 from voice_cascade.metrics import percentile
@@ -43,15 +44,18 @@ def test_balanced_gate_passes_with_simulated_budget(tmp_path: Path) -> None:
     )
     report = evaluate(result, scenarios)
     assert report.passed, report.failures
-    assert report.latency["e2e_ms"].p50 == 860
-    assert report.latency["e2e_ms"].p95 == 950
+    assert report.latency["e2e_ms"].p50 == 896
+    assert report.latency["e2e_ms"].p95 == 1004.5
+    assert report.latency["e2e_ms"].p50 != report.latency["e2e_ms"].p95
     assert report.latency["e2e_ms"].n == 36
-    assert report.latency["vad_endpoint_ms"].p95 == 400
-    assert report.latency["stt_final_ms"].p95 == 160
-    assert report.latency["llm_ttft_ms"].p95 == 140
-    assert report.latency["tool_webhook_ms"].p50 == 90
-    assert report.latency["tool_webhook_ms"].p95 == 180
-    assert report.latency["tts_ttfb_ms"].p95 == 70
+    assert report.latency["vad_endpoint_ms"].p50 == 400.5
+    assert report.latency["vad_endpoint_ms"].p95 == 412.5
+    assert report.latency["stt_final_ms"].p95 == 213.75
+    assert report.latency["llm_ttft_ms"].p95 == 195.5
+    assert report.latency["tool_webhook_ms"].p50 == 104
+    assert report.latency["tool_webhook_ms"].p95 == 206.75
+    assert report.latency["tts_ttfb_ms"].p95 == 99.5
+    assert report.latency["stt_final_ms"].p50 != report.latency["stt_final_ms"].p95
     assert report.false_cut_rate == 0
     assert report.missed_eligible_rate == 0
     assert report.missed_barge_in_rate == 0.5
@@ -65,7 +69,7 @@ def test_balanced_gate_passes_with_simulated_budget(tmp_path: Path) -> None:
     assert '"phone": "[REDACTED]"' in result.log_text or "[REDACTED]" in result.log_text
     by_id = {run.scenario_id: run for run in result.runs}
     assert by_id["L11"].outcome == "booked"
-    assert by_id["L11"].spans["e2e_ms"] == 950
+    assert by_id["L11"].spans["e2e_ms"] == 928
     assert by_id["L20"].outcome == "slots_offered"
     assert by_id["L26"].outcome == "cancelled"
     assert by_id["L28"].outcome == "escalated"
@@ -100,8 +104,8 @@ def test_profile_tradeoffs(tmp_path: Path) -> None:
     assert aggressive_report.missed_eligible_rate == 0
     assert aggressive_report.missed_barge_in_rate == 0
     assert aggressive_report.premature_rate == 1
-    assert aggressive_report.latency["e2e_ms"].p95 == 730
-    assert aggressive_report.latency["e2e_ms"].p50 == 640
+    assert aggressive_report.latency["e2e_ms"].p95 == 780
+    assert aggressive_report.latency["e2e_ms"].p50 == 676
     gated = evaluate(aggressive, scenarios, require_zero_false_cuts=True)
     assert gated.passed is False
     assert any(item.startswith("false_cut:") for item in gated.failures)
@@ -109,9 +113,9 @@ def test_profile_tradeoffs(tmp_path: Path) -> None:
     assert patient_report.false_cut_rate == 0
     assert patient_report.missed_eligible_rate == 0
     assert patient_report.premature_rate == 0
-    assert patient_report.latency["e2e_ms"].p95 == 1350
-    assert patient_report.latency["e2e_ms"].p50 == 1260
-    assert patient_report.latency["vad_endpoint_ms"].p95 == 800
+    assert patient_report.latency["e2e_ms"].p95 == 1413.75
+    assert patient_report.latency["e2e_ms"].p50 == 1295
+    assert patient_report.latency["vad_endpoint_ms"].p95 == 824.25
 
 
 def test_regression_poison_fails_and_safe_cassette_does_not(tmp_path: Path) -> None:
@@ -135,3 +139,16 @@ def test_regression_poison_fails_and_safe_cassette_does_not(tmp_path: Path) -> N
     )
     report = evaluate(safe, scenarios)
     assert report.passed, report.failures
+
+
+def test_tighter_budget_fails_the_gate(tmp_path: Path) -> None:
+    scenarios = build_scenarios()
+    result = run_suite(
+        scenarios,
+        data_dir=tmp_path,
+        settings=Settings(),
+        profile_name="balanced",
+    )
+    report = evaluate(result, scenarios, budget=StageBudget(e2e_ms=1))
+    assert report.passed is False
+    assert any(item.startswith("latency:e2e_ms:") for item in report.failures)

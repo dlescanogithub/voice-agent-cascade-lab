@@ -27,6 +27,8 @@ jobs:
         run: python -m voice_cascade eval
       - name: Secret scan
         run: python -m voice_cascade secretscan .
+      - name: Vendored scanner hash
+        run: make secretscan-hash
       - name: Forced regression must fail
         run: |
           set +e

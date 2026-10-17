@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: setup lint format typecheck test eval eval-regression demo secretscan ci
+.PHONY: setup lint format typecheck test eval eval-regression demo secretscan secretscan-hash ci
 
 setup:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -32,7 +32,10 @@ demo:
 secretscan:
 	$(PYTHON) -m voice_cascade secretscan .
 
-ci: lint typecheck test eval secretscan
+secretscan-hash:
+	$(PYTHON) -c "import hashlib,re; from pathlib import Path; text=Path('docs/PROVENANCE.md').read_text(); expected=re.search(r'sha256:\\s*([0-9a-f]{64})', text).group(1); actual=hashlib.sha256(Path('src/voice_cascade/secretscan.py').read_bytes()).hexdigest(); assert actual==expected, actual; print(actual)"
+
+ci: lint typecheck test eval secretscan secretscan-hash
 	@set +e; $(PYTHON) -m voice_cascade eval-regression; code=$$?; set -e; \
 	if [ $$code -eq 0 ]; then echo "expected eval-regression to fail"; exit 1; fi; \
 	echo "eval-regression failed as required (exit $$code)"

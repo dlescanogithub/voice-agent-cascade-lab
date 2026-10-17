@@ -40,7 +40,11 @@ class EvalReport:
         return {
             "passed": self.passed,
             "failures": self.failures,
+            "title": "SIMULATED latency report",
             "simulated": True,
+            "latency_note": (
+                "SIMULATED seeded lognormal clock. Not a measurement of a real provider."
+            ),
             "latency_ms": {name: stats.as_dict() for name, stats in self.latency.items()},
             "false_cut_rate": self.false_cut_rate,
             "missed_eligible_rate": self.missed_eligible_rate,

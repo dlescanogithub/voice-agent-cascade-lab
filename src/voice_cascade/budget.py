@@ -1,7 +1,12 @@
-"""Simulated stage times and the operating budget.
+"""Operating budget and the constant elapsed times used by webhook unit tests.
 
-Every duration here is simulated. The harness advances SimulatedClock by these
-constants. It does not measure wall-clock time.
+The eval harness does not advance the clock by these provider constants. It
+samples a seeded lognormal (see latency.py). TOOL_SUCCESS_MS and
+TOOL_REPLAY_MS remain the in-process transport's default elapsed time so
+webhook tests stay on a fixed clock. The pipeline passes its own elapsed
+callback and does not use those two constants for the latency cohort.
+
+Every duration in the eval path is simulated. Nothing here is wall-clock time.
 """
 
 from __future__ import annotations

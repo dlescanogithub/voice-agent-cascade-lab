@@ -10,6 +10,7 @@ from voice_cascade.audio import barge_speech, noise_burst, scripted_utterance
 from voice_cascade.booking import BookingStore
 from voice_cascade.clock import SimulatedClock
 from voice_cascade.config import Settings
+from voice_cascade.latency import LatencySampler
 from voice_cascade.llm import (
     SAFE_DLQ,
     SAFE_SLOT,
@@ -236,6 +237,7 @@ def _run_scenario(
     regression: bool,
 ) -> ScenarioRun:
     clock = SimulatedClock()
+    sampler = LatencySampler(settings.seed, scenario.id, settings.latency_law())
     store.ensure_slot(scenario.slot_id, scenario.date, SERVICE)
     if scenario.prebooked:
         store.seed_booking(
@@ -246,18 +248,29 @@ def _run_scenario(
             scenario.booking_id,
         )
     heard = endpoint(scripted_utterance(scenario.utterance, scenario.internal_pause_ms), profile)
-    clock.advance(heard.endpoint_ms)
+    # The endpoint decision stays on the profile thresholds. The clock charge is a
+    # seeded draw whose median is that profile's end-silence. [EST] sigma.
+    vad_ms = sampler.draw("vad", median_ms=float(profile.end_silence_ms))
+    clock.advance(vad_ms)
     stt = transcribe(heard.words, seed=settings.seed, scenario_id=scenario.id, wer=scenario.wer)
-    clock.advance(stt.final_ms)
+    stt_ms = sampler.draw("stt")
+    clock.advance(stt_ms)
     plan = apply_clinical_guard(
         plan_for(stt.text, regression=regression),
         enabled=not settings.disable_clinical_guard and not regression,
     )
-    clock.advance(plan.ttft_ms)
+    llm_ms = sampler.draw("llm")
+    clock.advance(llm_ms)
     fault = None
     if scenario.fault_mode and scenario.fault_tool:
         fault = FaultPlan(scenario.fault_tool, scenario.fault_mode, scenario.fault_times)
-    client = WebhookClient(transport, clock, dlq, settings)
+
+    def elapsed_for(payload: dict[str, object]) -> int:
+        if payload.get("idempotent_replay") is True:
+            return sampler.draw("replay")
+        return sampler.draw("tool")
+
+    client = WebhookClient(transport, clock, dlq, settings, elapsed_for=elapsed_for)
     before_tools = clock.now_ms
     results: list[dict[str, object]] = []
     for tool in plan.tools:
@@ -279,17 +292,18 @@ def _run_scenario(
     tool_ms = clock.now_ms - before_tools
     text = _assistant_text(plan.text, results)
     playback = synthesize(text)
-    clock.advance(playback.ttfb_ms)
+    tts_ms = sampler.draw("tts")
+    clock.advance(tts_ms)
     cancelled, false_cut, cancel_latency, missed = _apply_playback_events(
         playback, scenario, profile
     )
     outcome = _outcome(plan.intent, results)
     spans = {
-        "vad_endpoint_ms": heard.endpoint_ms,
-        "stt_final_ms": stt.final_ms,
-        "llm_ttft_ms": plan.ttft_ms,
+        "vad_endpoint_ms": vad_ms,
+        "stt_final_ms": stt_ms,
+        "llm_ttft_ms": llm_ms,
         "tool_webhook_ms": tool_ms,
-        "tts_ttfb_ms": playback.ttfb_ms,
+        "tts_ttfb_ms": tts_ms,
     }
     spans["e2e_ms"] = sum(spans.values())
     log_event(

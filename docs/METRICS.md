@@ -2,23 +2,25 @@
 
 Two layers. The first is what this repository measures. The second is what a pilot would add. Do not mix them in a slide without the label.
 
-## Measured here (simulated)
+## SIMULATED latency report
 
 Command: `python -m voice_cascade eval` and `python -m voice_cascade latency-report`.
-Date of the numbers in the README: 2026-10-17. Version 0.1.0.
+Date of the placeholders in the README: 2026-10-17. Version 0.1.1. These are not provider measurements. The harness computes and gates a budget; the cells are placeholders from the seeded clock.
 
-| Metric | Operating target in this lab | Latest simulated result |
+| Metric | Operating target in this lab | Latest SIMULATED result |
 | --- | --- | --- |
 | Invariant gate, balanced profile | exit 0 | pass (locked by tests) |
 | Forced regression | exit non-zero | must fail |
-| p95 end-to-end, latency cohort, balanced | ≤ 2500 ms simulated | 950 ms simulated |
-| p50 end-to-end, balanced | report only | 860 ms simulated |
-| False-cut rate, balanced | 0 | 0.0 |
+| p95 end-to-end, latency cohort, balanced | ≤ 2500 ms | 1004.5 ms SIMULATED |
+| p50 end-to-end, balanced | report only | 896 ms SIMULATED |
+| False-cut rate, balanced | 0 | 0.0 SIMULATED |
 | Missed eligible interruptions, balanced | 0 | 0.0 |
 | Active bookings per slot | ≤ 1 | 1 in the conflict and duplicate scripts |
 | Clinical advice in assistant text | 0 calls | 0 when the guard is on |
 | Raw phone or scripted name in logs | 0 | redacted |
-| Real provider calls | 0 | 0 |
+| Real provider calls in CI | 0 | 0 |
+
+The aggressive false-cut rate of 1.0 is SIMULATED and holds by construction of the synthetic noise (RMS 0.35) against threshold 0.30. It is not a field rate.
 
 Missed barge-in including sub-threshold bursts is a **reported** tradeoff (0.5 on balanced), not a gate failure. Those 80 ms bursts are below `min_speech_ms`.
 

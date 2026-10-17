@@ -2,7 +2,9 @@
 
 Offline lab that tests a simulated STT → LLM → TTS cascade for appointment scheduling: where the latency goes, and whether a tool webhook can retry without booking twice.
 
-> **Honest limits.** Every latency number in this repo is **simulated**. A fake clock advances by fixed stage times. No microphone, no telephone, and no vendor STT, LLM, or TTS was called. Simulated is not measured on real providers. See [Measured with real providers: none yet](#measured-with-real-providers-none-yet).
+> **Honest limits.** The harness computes and gates a latency budget. The p50 and p95 figures below are **SIMULATED** placeholders from a seeded lognormal clock (parameters marked [EST]). They are not a measurement of a speech, language, or synthesis service. The aggressive false-cut rate of 1.0 is **SIMULATED** and holds by construction: the synthetic noise sits above that profile's energy threshold. No microphone, no telephone, and no live provider is called by `eval`, `demo`, or CI.
+>
+> An optional real-provider run is off by default and is not part of CI. The owner exports `LIVE_MODE=1` and the variables in `.env.example`, then runs `python -m voice_cascade live`. Missing config, or a cost estimate above `MAX_LIVE_SPEND_USD`, exits 2 and sends no request. A successful run writes wall-clock time-to-first-byte and total time under `var/live/` (gitignored). The table [Measured with real providers](#measured-with-real-providers) stays empty until the owner pastes that run. Do not commit keys.
 
 ## Problem and result
 
@@ -10,9 +12,9 @@ A voice cascade hides time in five places: waiting to decide the caller has stop
 
 On the fictional **Clínica Aurora** (scheduling only, never clinical advice) the harness runs 49 scripted calls. The operating point is the **balanced** VAD profile. The latency cohort is 36 of those calls.
 
-**Measured: 2026-10-17**, package version **0.1.0**, command `python -m voice_cascade eval` (balanced profile). git revision: `2352bce1f36a9f48ff8fce28c33a155953f65a13` (runtime tree; the docs commit on top does not change `src/` or `tests/`).
+**SIMULATED placeholder, 2026-10-17**, package version **0.1.1**, command `python -m voice_cascade eval` (balanced profile). git revision: `RUNTIME_SHA` (runtime tree; a later commit may only record this hash).
 
-**p95 end-to-end: 950 ms (simulated)** against a budget of 2500 ms (simulated). **p50 end-to-end: 860 ms (simulated)**. The same command exits 0 only when the invariant gate passes: task completed or escalated, no double booking, no clinical advice, PII redacted, latency budget held, eligible barge-ins cancelled.
+The harness computes and gates a latency budget. **p95 end-to-end: 1004.5 ms (SIMULATED)** against a budget of 2500 ms. **p50 end-to-end: 896 ms (SIMULATED)**. These two percentiles differ because each stage is a seeded draw, not a constant. They are placeholders until real providers are measured. The same command exits 0 only when the invariant gate passes: task completed or escalated, no double booking, no clinical advice, PII redacted, latency budget held, eligible barge-ins cancelled.
 
 ## Demo
 
@@ -45,41 +47,56 @@ The fake LLM does not read free text as a model. It folds the transcript, picks 
 
 ## Results
 
-All figures below are **simulated**, from `python -m voice_cascade eval` and `python -m voice_cascade latency-report`. Date: 2026-10-17. Version: 0.1.0. Percentiles use the inclusive linear method (NumPy type 7) on the 36-call latency cohort. git revision: `2352bce1f36a9f48ff8fce28c33a155953f65a13` (runtime tree; the docs commit on top does not change `src/` or `tests/`).
+## SIMULATED latency report
 
-### Latency cohort, balanced profile
+All figures below are **SIMULATED** placeholders, from `python -m voice_cascade eval` and `python -m voice_cascade latency-report`. Date: 2026-10-17. Version: 0.1.1. Seed: 42. Percentiles use the inclusive linear method (NumPy type 7) on the 36-call latency cohort. git revision: `RUNTIME_SHA`. The harness computes and gates a latency budget. The numbers themselves are placeholders until real providers are measured.
 
-| Stage | p50 (simulated ms) | p95 (simulated ms) | Budget p95 (simulated ms) |
+Draws are lognormal. The median is exp(mu). Sigma is the standard deviation of the underlying normal. Box-Muller on `random.Random.random()` keeps Python 3.11 and 3.12 on the same values. Samples are not capped at the budget. The floor is 1 ms. Parameters are **[EST]**.
+
+| Stage | Median ms [EST] | Sigma [EST] |
+| --- | ---: | ---: |
+| VAD charge | profile end-silence (180 / 400 / 800) | 0.03 |
+| STT final | 160 | 0.20 |
+| LLM first token | 140 | 0.20 |
+| Tool webhook, each successful call | 90 | 0.18 |
+| Idempotent replay | 15 | 0.12 |
+| TTS first byte | 70 | 0.25 |
+
+Turn-taking decisions stay on the profile thresholds. Only the clock charge is sampled, so the false-cut and barge-in rates do not move when the seed's draws move.
+
+### SIMULATED latency cohort, balanced profile
+
+| Stage | p50 (SIMULATED ms) | p95 (SIMULATED ms) | Budget p95 (ms) |
 | --- | ---: | ---: | ---: |
-| VAD endpoint | 400 | 400 | 900 |
-| STT final | 160 | 160 | 400 |
-| LLM TTFT | 140 | 140 | 350 |
-| Tool webhook | 90 | 180 | 800 |
-| TTS TTFB | 70 | 70 | 250 |
-| End to end | 860 | 950 | 2500 |
+| VAD endpoint | 400.5 | 412.5 | 900 |
+| STT final | 155 | 213.75 | 400 |
+| LLM TTFT | 137 | 195.5 | 350 |
+| Tool webhook | 104 | 206.75 | 800 |
+| TTS TTFB | 69.5 | 99.5 | 250 |
+| End to end | 896 | 1004.5 | 2500 |
 
 End-to-end is the sum of those stages from end of caller speech to the first TTS byte. Caller audio time is not added on top. Partials are recorded and do not move the end-to-end clock.
 
-### VAD profiles on the same 49 scripts
+### SIMULATED VAD profiles on the same 49 scripts
 
-| Profile | p50 e2e | p95 e2e | False-cut rate | Missed eligible | Missed barge-in, all attempts | Premature endpoint | Gate |
+| Profile | p50 e2e (SIMULATED ms) | p95 e2e (SIMULATED ms) | False-cut rate (SIMULATED) | Missed eligible | Missed barge-in, all attempts | Premature endpoint (SIMULATED) | Gate |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| aggressive | 640 | 730 | 1.0 | 0.0 | 0.0 | 1.0 | fail |
-| balanced | 860 | 950 | 0.0 | 0.0 | 0.5 | 0.0 | pass |
-| patient | 1260 | 1350 | 0.0 | 0.0 | 0.5 | 0.0 | pass |
+| aggressive | 676 | 780 | 1.0 | 0.0 | 0.0 | 1.0 | fail |
+| balanced | 896 | 1004.5 | 0.0 | 0.0 | 0.5 | 0.0 | pass |
+| patient | 1295 | 1413.75 | 0.0 | 0.0 | 0.5 | 0.0 | pass |
 
 Plain-language labels used in the rest of the docs:
 
-- false-cut rate (aggressive, simulated): 1.0
-- false-cut rate (balanced, simulated): 0.0
-- false-cut rate (patient, simulated): 0.0
-- missed eligible interruptions (balanced, simulated): 0.0
-- missed barge-in including sub-threshold (balanced, simulated): 0.5
-- premature endpoint (aggressive, simulated): 1.0
-- p95 end-to-end (aggressive, simulated): 730 ms
-- p95 end-to-end (patient, simulated): 1350 ms
+- false-cut rate (aggressive, SIMULATED): 1.0
+- false-cut rate (balanced, SIMULATED): 0.0
+- false-cut rate (patient, SIMULATED): 0.0
+- missed eligible interruptions (balanced, SIMULATED): 0.0
+- missed barge-in including sub-threshold (balanced, SIMULATED): 0.5
+- premature endpoint (aggressive, SIMULATED): 1.0
+- p95 end-to-end (aggressive, SIMULATED): 780 ms
+- p95 end-to-end (patient, SIMULATED): 1413.75 ms
 
-False-cut rate is noise bursts during TTS that cancelled playback, divided by noise-burst calls (6). Missed eligible is speech during TTS that was long enough for that profile and was not cancelled. The 0.5 missed-barge-in figure counts 80 ms bursts that balanced and patient are configured to ignore (4 of 8 barge-in calls). Aggressive treats 100 ms noise as speech, so the gate refuses that profile.
+False-cut rate is noise bursts during TTS that cancelled playback, divided by noise-burst calls (6). The aggressive rate of 1.0 holds by construction of this script: the synthetic noise has RMS 0.35 and the aggressive threshold is 0.30, so every noise burst is activity. That is a property of the fixture and the threshold, not a field measurement. Missed eligible is speech during TTS that was long enough for that profile and was not cancelled. The 0.5 missed-barge-in figure counts 80 ms bursts that balanced and patient are configured to ignore (4 of 8 barge-in calls). The gate refuses the aggressive profile.
 
 ### Robustness cohort
 
@@ -114,11 +131,12 @@ Client-style use cases are fictional. They are patterns, not accounts.
 | --- | --- |
 | Synthetic frames, three VAD profiles, fake STT/LLM/TTS | Implemented |
 | Barge-in metrics on 49 scripts | Implemented |
-| Simulated latency budgets and p50/p95 | Implemented |
+| SIMULATED latency budget, seeded draws, p50/p95 gate | Implemented |
 | HMAC webhook, idempotency, bounded retries, DLQ replay | Implemented |
 | Invariant eval gate and forced regression | Implemented |
 | PII redaction in JSON logs and traces | Implemented |
-| Real STT/LLM/TTS stubs that refuse to send | Implemented as stubs, off by default |
+| Optional live measurement (`python -m voice_cascade live`) | Implemented, off unless `LIVE_MODE=1`, not in CI |
+| Refuse-only flags that never send | Implemented, off by default |
 | Telephony, WebRTC, neural VAD, speech-to-speech, consent, multi-language | Design only |
 
 ### 2. Governance checklist
@@ -132,7 +150,7 @@ Client-style use cases are fictional. They are patterns, not accounts.
 | Costs | [docs/COST.md](docs/COST.md) |
 | Incident and rollback | [docs/RUNBOOK.md](docs/RUNBOOK.md) |
 | Secrets stay out of the tree | `secretscan.py`, `.env.example`, CI secret-scan job |
-| No paid call in CI | Real adapters in `providers.py` raise. Tests do not use a vendor. |
+| No paid call in CI | `LIVE_MODE` is unset in CI. Tests use a fake HTTP layer. `eval` does not open a socket. |
 
 **Not covered yet**
 
@@ -164,22 +182,19 @@ Threat notes: [SECURITY.md](SECURITY.md). The demo HMAC constant is not a creden
 ### What this does NOT do
 
 - It does not place or receive a phone call.
-- It does not measure a real STT, LLM, or TTS vendor. **Measured with real providers: none yet.**
+- It does not, by itself, measure a live speech, language, or synthesis service. The table below stays empty until the owner runs the live command and pastes the rows.
 - It does not give clinical advice, and it must not be used as a medical device.
 - It does not prove a production voice deployment. Nothing here was on a live queue.
 - It does not understand dates in free text. The cassette names the tool; the script supplies the slot id.
 - It does not authenticate a caller, record consent, or speak more than one language.
 - It does not load `.env`. Empty placeholders are in `.env.example`.
 
-### Measured with real providers: none yet
+### Measured with real providers
 
-| Role | Vendor | Calls made | Date | Notes |
-| --- | --- | ---: | --- | --- |
-| STT | none yet | 0 | 2026-10-17 | Stub raises. Flag defaults off. |
-| LLM | none yet | 0 | 2026-10-17 | Stub raises. Flag defaults off. |
-| TTS | none yet | 0 | 2026-10-17 | Stub raises. Flag defaults off. |
+| Role | Calls | TTFB p50 (ms) | Total p50 (ms) | Price date | Date | Commit | Command |
+| --- | ---: | ---: | ---: | --- | --- | --- | --- |
 
-Fill this table only after a run that names the vendor, the date, the command, and the commit. Until then the cell stays "none yet".
+This table stays empty until the owner pastes a run of `python -m voice_cascade live`. The command writes `var/live/results.json` and does not edit this file.
 
 ## How to reproduce
 
@@ -204,15 +219,21 @@ python3 -m voice_cascade eval-regression
 
 CI runs that command and fails the job if the exit code is 0. The regression turns the clinical guard off and injects the advice sentence stored under `regression_clinical` in the cassette. A green regression means the gate can no longer see clinical advice.
 
-Latency comparison:
+Latency comparison (SIMULATED):
 
 ```bash
 python3 -m voice_cascade latency-report
 ```
 
+Optional real-provider measurement (owner machine only, not CI). Exits 2 with no request when config is missing or the estimate exceeds the cap:
+
+```bash
+python -m voice_cascade live
+```
+
 ## Next steps
 
-1. Record one real provider in the table above, with a dated command, before any claim about vendor latency.
+1. Run `python -m voice_cascade live` on an owner machine and paste the wall-clock rows into the empty table before any claim about provider latency.
 2. Replace script-filled tool arguments with arguments the model actually emitted, and add an invariant that those arguments stay inside the allowed slot set.
 3. Add a shadow mode that logs the booking it would have made and does not write.
 4. Design the consent and telephony pieces in [docs/SCOPE.md](docs/SCOPE.md) only after a client answers the discovery questions.
