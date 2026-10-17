@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: python -m ruff check . && python -m ruff format --check .
+      - name: Types
+        run: python -m mypy
+      - name: Tests
+        run: python -m pytest
+      - name: Eval gate
+        run: python -m voice_cascade eval
+      - name: Secret scan
+        run: python -m voice_cascade secretscan .
+      - name: Forced regression must fail
+        run: |
+          set +e
+          python -m voice_cascade eval-regression
+          code=$?
+          set -e
+          if [ "$code" -eq 0 ]; then
+            echo "eval-regression passed; the gate did not go red"
+            exit 1
+          fi
+          echo "eval-regression failed as required (exit ${code})"

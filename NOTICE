@@ -1,0 +1,12 @@
+voice-agent-cascade-lab
+
+Copyright (c) 2026 Diego Lescano
+
+The eval shape (cassette provider, JSONL traces, JSON logs, invariant checks,
+secret scan) follows the contract described for
+https://github.com/dlescanogithub/agent-runtime-evals
+commit 55cfd4183fb2489d77fc9c8552e008274dc78f77.
+
+This workspace could not read that private repository (HTTP 404 with the
+token scoped to voice-agent-cascade-lab). The modules here are a
+reimplementation, not a byte copy. See docs/PROVENANCE.md.
