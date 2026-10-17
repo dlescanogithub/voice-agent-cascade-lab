@@ -96,7 +96,13 @@ def test_live_command_prints_a_measured_run(
     def fake_run(env: object, output: Path) -> dict[str, object]:
         del env
         assert output == tmp_path / "live"
-        return {"turns": [{}], "estimated_usd": 0.01, "price_date": "2026-10-17"}
+        return {
+            "title": "Measured with real providers",
+            "turns": [{}],
+            "estimated_usd": 0.01,
+            "price_date": "2026-10-17",
+            "invariants": {"passed": True, "failures": []},
+        }
 
     monkeypatch.setattr("voice_cascade.cli.run_live", fake_run)
     assert main(["live"]) == 0
@@ -111,6 +117,34 @@ def test_live_command_prints_a_measured_run(
         raise LiveRequestError("gave up")
 
     monkeypatch.setattr("voice_cascade.cli.run_live", fail_run)
+    assert main(["live"]) == 1
+
+
+def test_live_command_exits_1_when_an_invariant_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("VOICE_CASCADE_DATA_DIR", str(tmp_path))
+
+    def fake_run(env: object, output: Path) -> dict[str, object]:
+        del env, output
+        return {
+            "title": "Partially measured: LLM real, STT/TTS stub",
+            "turns": [{}],
+            "estimated_usd": 0.01,
+            "price_date": "2026-10-17",
+            "invariants": {
+                "passed": False,
+                "failures": ["unsupported_availability_claim:S2"],
+            },
+            "latency": {
+                "e2e_real_only": {
+                    "n": 3,
+                    "warning": "n=3 is below 20; p50 and p95 are not reported.",
+                }
+            },
+        }
+
+    monkeypatch.setattr("voice_cascade.cli.run_live", fake_run)
     assert main(["live"]) == 1
 
 

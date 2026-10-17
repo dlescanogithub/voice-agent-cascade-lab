@@ -10,16 +10,24 @@ import pytest
 
 from voice_cascade.live import (
     LIVE_TURNS,
+    PERCENTILE_MIN_N,
+    SAFE_NO_AGENDA,
+    SYSTEM_PROMPT,
     HttpExchange,
     HttpRequest,
     LiveConfig,
     LiveConfigError,
     LiveRequestError,
+    LiveTurn,
     RecordingTransport,
     UrllibTransport,
     estimate_usd,
     exchange_with_retry,
+    report_title,
     run_live,
+    summarize_ms,
+    token_estimate_usd,
+    unsupported_availability_claim,
     wait_ms,
 )
 from voice_cascade.llm import SAFE_CLINICAL
@@ -61,8 +69,10 @@ def _stt(text: str = "quiero un turno") -> HttpExchange:
     return _exchange(200, json.dumps({"text": text}).encode())
 
 
-def _llm(text: str) -> HttpExchange:
-    payload = {"choices": [{"message": {"role": "assistant", "content": text}}]}
+def _llm(text: str, usage: dict[str, object] | None = None) -> HttpExchange:
+    payload: dict[str, object] = {"choices": [{"message": {"role": "assistant", "content": text}}]}
+    if usage is not None:
+        payload["usage"] = usage
     return _exchange(200, json.dumps(payload).encode(), ttfb=0.03, total=0.04)
 
 
@@ -115,8 +125,27 @@ def test_estimate_uses_env_prices_and_the_est_token_width() -> None:
 def test_scripted_run_measures_wall_clock_fields_and_guards_advice(tmp_path: Path) -> None:
     transport = RecordingTransport(_script())
     payload = run_live(_env(), tmp_path, transport=transport, sleeper=lambda _ms: None)
-    assert payload["simulated"] is False
+    assert "simulated" not in payload
     assert payload["title"] == "Measured with real providers"
+    stages = payload["stages"]
+    assert isinstance(stages, dict)
+    for name in ("stt", "llm", "tts"):
+        stage = stages[name]
+        assert isinstance(stage, dict)
+        assert stage["source"] == "real"
+        assert stage["simulated"] is False
+    assert stages["vad"]["source"] == "stub"
+    assert stages["tool"]["source"] == "stub"
+    assert stages["tool"]["provider"] == "not-run"
+    latency = payload["latency"]
+    assert isinstance(latency, dict)
+    e2e = latency["e2e_real_only"]
+    assert isinstance(e2e, dict)
+    assert e2e["n"] == 3
+    assert "p50" not in e2e
+    assert "p50_ms" not in e2e
+    assert "p95_ms" not in e2e
+    assert "warning" in e2e
     assert payload["complete"] is True
     assert payload["price_date"] == "2026-10-17"
     turns = payload["turns"]
@@ -138,6 +167,10 @@ def test_scripted_run_measures_wall_clock_fields_and_guards_advice(tmp_path: Pat
     assert tts_calls[2].url.endswith("/v1/text-to-speech/voice-lab")
     llm_calls = [call for call in transport.calls if call.url.endswith("/chat/completions")]
     assert llm_calls[0].headers["Authorization"] == "Bearer lab-llm-key"
+    sent = json.loads(llm_calls[0].body.decode("utf-8"))
+    assert "No tenés acceso a la agenda" in sent["messages"][0]["content"]
+    assert "No inventes horarios" in sent["messages"][0]["content"]
+    assert SYSTEM_PROMPT in sent["messages"][0]["content"]
     written = (tmp_path / "results.json").read_text(encoding="utf-8")
     assert "lab-stt-key" not in written
     assert "lab-llm-key" not in written
@@ -270,3 +303,155 @@ def test_urllib_transport_uses_the_injected_opener_and_http_errors() -> None:
 
     with pytest.raises(LiveRequestError, match="connection failed"):
         UrllibTransport(offline).exchange(request)
+
+
+INVENTED_SLOTS = (
+    "Claro. Tengo disponible estos horarios para consulta general: "
+    "9:00, 10:30, 11:45, 14:00, 15:15 y 16:30."
+)
+HONEST_AGENDA = "No puedo ver la agenda."
+
+
+def test_availability_claim_flags_the_recorded_reply_and_accepts_a_refusal() -> None:
+    assert unsupported_availability_claim(INVENTED_SLOTS, has_calendar_tool=False) is True
+    assert unsupported_availability_claim(HONEST_AGENDA, has_calendar_tool=False) is False
+    assert unsupported_availability_claim("tengo disponible a la mañana", has_calendar_tool=False)
+    assert unsupported_availability_claim(INVENTED_SLOTS, has_calendar_tool=True) is False
+
+
+def test_loopback_stubs_are_not_titled_as_a_full_measurement(tmp_path: Path) -> None:
+    env = _env(
+        LIVE_STT_URL="http://127.0.0.1:9/transcribe",
+        LIVE_TTS_BASE_URL="http://127.0.0.1:9",
+    )
+    transport = RecordingTransport(_script())
+    payload = run_live(env, tmp_path, transport=transport, sleeper=lambda _ms: None)
+    assert payload["title"] == "Partially measured: LLM real, STT/TTS stub"
+    stages = payload["stages"]
+    assert isinstance(stages, dict)
+    assert stages["stt"]["source"] == "stub"
+    assert stages["stt"]["provider"] == "local-stub"
+    assert stages["stt"]["simulated"] is True
+    assert stages["tts"]["source"] == "stub"
+    assert stages["llm"]["source"] == "real"
+    assert stages["llm"]["simulated"] is False
+    assert "127.0.0.1:9" in str(stages["stt"]["endpoint"])
+    assert "lab-stt-key" not in str(stages["stt"]["endpoint"])
+    latency = payload["latency"]
+    assert isinstance(latency, dict)
+    e2e = latency["e2e_real_only"]
+    assert isinstance(e2e, dict)
+    assert e2e["min_ms"] == 40.0
+    assert e2e["max_ms"] == 40.0
+    assert "p50_ms" not in e2e
+    stub = latency["stt"]
+    assert isinstance(stub, dict)
+    assert "p50_ms" not in stub
+    assert "excluded from end-to-end" in str(stub["warning"])
+
+
+def test_invented_slots_fail_the_live_invariant_and_are_not_spoken(tmp_path: Path) -> None:
+    turn = LiveTurn("S2", "Qué horarios hay disponibles para consulta general.")
+    transport = RecordingTransport([_stt(), _llm(INVENTED_SLOTS), _tts()])
+    payload = run_live(
+        _env(),
+        tmp_path,
+        transport=transport,
+        sleeper=lambda _ms: None,
+        turns=(turn,),
+    )
+    invariants = payload["invariants"]
+    assert isinstance(invariants, dict)
+    assert invariants["passed"] is False
+    assert invariants["failures"] == ["unsupported_availability_claim:S2"]
+    spoken = json.loads(transport.calls[2].body.decode("utf-8"))
+    assert spoken["text"] == SAFE_NO_AGENDA
+    assert "9:00" not in spoken["text"]
+    assert "10:30" not in spoken["text"]
+
+
+def test_honest_agenda_reply_passes(tmp_path: Path) -> None:
+    turn = LiveTurn("S2", "Qué horarios hay disponibles para consulta general.")
+    transport = RecordingTransport([_stt(), _llm(HONEST_AGENDA), _tts()])
+    payload = run_live(
+        _env(),
+        tmp_path,
+        transport=transport,
+        sleeper=lambda _ms: None,
+        turns=(turn,),
+    )
+    invariants = payload["invariants"]
+    assert isinstance(invariants, dict)
+    assert invariants["passed"] is True
+    spoken = json.loads(transport.calls[2].body.decode("utf-8"))
+    assert spoken["text"] == HONEST_AGENDA
+
+
+def test_usage_records_tokens_cached_estimate_and_provider_cost(tmp_path: Path) -> None:
+    usage = {
+        "prompt_tokens": 237,
+        "completion_tokens": 40,
+        "prompt_tokens_details": {"cached_tokens": 128},
+        "cost_in_usd_ticks": 8555500,
+    }
+    turn = LiveTurn("S1", "Quiero agendar un turno de consulta general.")
+    transport = RecordingTransport([_stt(), _llm("No puedo confirmar una reserva.", usage), _tts()])
+    payload = run_live(
+        _env(LIVE_LLM_USD_PER_1K_CACHED_TOKENS="0.0002"),
+        tmp_path,
+        transport=transport,
+        sleeper=lambda _ms: None,
+        turns=(turn,),
+    )
+    cost = payload["cost"]
+    assert isinstance(cost, dict)
+    assert cost["input_tokens"] == 237
+    assert cost["output_tokens"] == 40
+    assert cost["cached_tokens"] == 128
+    assert cost["cached_tokens_reported"] is True
+    assert cost["provider_reported_usd"] == pytest.approx(8555500 * 1e-10)
+    turns = payload["turns"]
+    assert isinstance(turns, list)
+    llm = turns[0]["llm"]
+    assert isinstance(llm, dict)
+    recorded = llm["usage"]
+    assert isinstance(recorded, dict)
+    assert "Cached tokens were priced" in str(recorded["estimate_note"])
+    config = LiveConfig.from_env(_env(LIVE_LLM_USD_PER_1K_CACHED_TOKENS="0.0002"))
+    estimate, _note = token_estimate_usd(config, recorded)
+    assert cost["token_estimate_usd"] == pytest.approx(estimate)
+
+
+def test_estimate_ignores_cached_tokens_when_usage_omits_them() -> None:
+    config = LiveConfig.from_env(_env())
+    usage = {
+        "input_tokens": 100,
+        "output_tokens": 10,
+        "cached_tokens": None,
+        "cached_tokens_reported": False,
+    }
+    estimate, note = token_estimate_usd(config, usage)
+    assert estimate == pytest.approx((100 / 1000) * 0.002 + (10 / 1000) * 0.004)
+    assert "did not report them" in note
+
+
+def test_small_n_omits_percentiles_and_a_larger_n_reports_them() -> None:
+    small = summarize_ms([970, 984, 1328], allow_percentiles=True)
+    assert small["n"] == 3
+    assert small["min_ms"] == 970
+    assert small["max_ms"] == 1328
+    assert "p50_ms" not in small
+    assert "p95_ms" not in small
+    assert PERCENTILE_MIN_N == 20
+    large = summarize_ms([100.0] * PERCENTILE_MIN_N, allow_percentiles=True)
+    assert large["p50_ms"] == 100
+    assert large["p95_ms"] == 100
+    assert "warning" not in large
+
+
+def test_explicit_stub_overrides_a_non_loopback_host() -> None:
+    assert report_title("stub", "real", "stub") == "Partially measured: LLM real, STT/TTS stub"
+    config = LiveConfig.from_env(_env(LIVE_STT_SOURCE="stub", LIVE_TTS_SOURCE="stub"))
+    assert config.stt_source == "stub"
+    assert config.tts_source == "stub"
+    assert config.llm_source == "real"

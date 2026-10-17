@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2] - 2026-10-17
+
+- Live results label each stage `real` or `stub`. The title `Measured with real providers` is used only when speech, language, and synthesis are all real. Stub timings stay out of the end-to-end summary.
+- Samples smaller than 20 report min, max, and n. They do not report p50 or p95.
+- Live mode records token counts, a token estimate, and provider-reported cost when `usage` includes them. The estimate ignores cached tokens unless the response reports them and a cached price is set.
+- A reply that invents clock times or says "tengo disponible" without a calendar tool fails `unsupported_availability_claim`.
+
 ## [0.1.1] - 2026-10-17
 
 - SIMULATED clock charges are seeded lognormal draws with [EST] parameters, so p50 and p95 differ and the budget gate can fail.

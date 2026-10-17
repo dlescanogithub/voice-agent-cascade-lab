@@ -4,7 +4,7 @@ Offline lab that tests a simulated STT → LLM → TTS cascade for appointment s
 
 > **Honest limits.** The harness computes and gates a latency budget. The p50 and p95 figures below are **SIMULATED** placeholders from a seeded lognormal clock (parameters marked [EST]). They are not a measurement of a speech, language, or synthesis service. The aggressive false-cut rate of 1.0 is **SIMULATED** and holds by construction: the synthetic noise sits above that profile's energy threshold. No microphone, no telephone, and no live provider is called by `eval`, `demo`, or CI.
 >
-> An optional real-provider run is off by default and is not part of CI. The owner exports `LIVE_MODE=1` and the variables in `.env.example`, then runs `python -m voice_cascade live`. Missing config, or a cost estimate above `MAX_LIVE_SPEND_USD`, exits 2 and sends no request. A successful run writes wall-clock time-to-first-byte and total time under `var/live/` (gitignored). The table [Measured with real providers](#measured-with-real-providers) stays empty until the owner pastes that run. Do not commit keys.
+> An optional real-provider run is off by default and is not part of CI. The owner exports `LIVE_MODE=1` and the variables in `.env.example`, then runs `python -m voice_cascade live`. Missing config, or a cost estimate above `MAX_LIVE_SPEND_USD`, exits 2 and sends no request. A run writes `var/live/results.json` (gitignored) and labels every stage `real` or `stub`. Loopback endpoints are stubs unless the owner sets `LIVE_*_SOURCE=real`. The title is `Measured with real providers` only when STT, the language call, and synthesis are all real. Otherwise it is `Partially measured: …`. Stub timings are excluded from end-to-end. With fewer than 20 samples the file reports min, max, and n, and does not report p50 or p95. The table [Measured with real providers](#measured-with-real-providers) stays empty unless the owner pastes a run whose title is exactly that. Do not commit keys.
 
 ## Problem and result
 
@@ -182,7 +182,7 @@ Threat notes: [SECURITY.md](SECURITY.md). The demo HMAC constant is not a creden
 ### What this does NOT do
 
 - It does not place or receive a phone call.
-- It does not, by itself, measure a live speech, language, or synthesis service. The table below stays empty until the owner runs the live command and pastes the rows.
+- It does not, by itself, measure a live speech, language, or synthesis service. The table below stays empty unless every measured stage in the pasted run was real. A partial run stays in `var/live/` and is not copied here.
 - It does not give clinical advice, and it must not be used as a medical device.
 - It does not prove a production voice deployment. Nothing here was on a live queue.
 - It does not understand dates in free text. The cassette names the tool; the script supplies the slot id.
@@ -194,7 +194,7 @@ Threat notes: [SECURITY.md](SECURITY.md). The demo HMAC constant is not a creden
 | Role | Calls | TTFB p50 (ms) | Total p50 (ms) | Price date | Date | Commit | Command |
 | --- | ---: | ---: | ---: | --- | --- | --- | --- |
 
-This table stays empty until the owner pastes a run of `python -m voice_cascade live`. The command writes `var/live/results.json` and does not edit this file.
+This table stays empty until the owner pastes a run of `python -m voice_cascade live` whose title is exactly `Measured with real providers`. A file titled `Partially measured: LLM real, STT/TTS stub` does not belong here. Stub stage times are not an end-to-end measurement. The command writes `var/live/results.json` and does not edit this file. Live mode has no calendar tool: a reply that states a clock time or "tengo disponible" is an `unsupported_availability_claim` failure.
 
 ## How to reproduce
 
