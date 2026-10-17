@@ -1,8 +1,13 @@
 # Changelog
 
+## [0.1.6] - 2026-10-17
+
+- `unsupported_availability_claim` also flags "hueco"/"cupo", "te puedo meter", "te confirmo el turno", "está libre" next to a day, "appointment open", "slots are available on the 12th", "I've scheduled you", and "Tuesday afternoon is open". Cancellation policies stay quiet.
+- Recall on handwritten samples from 2026-10-17, not on these unit tests: an earlier set, measured before the patterns in pull request 7, was 14/20 claims and 1/18 clean sentences. A later set of unseen phrases was 11/20 (about 55%, about ±22 points at n=20) and 0/20 clean sentences. Recall after this expansion is not measured yet.
+
 ## [0.1.5] - 2026-10-17
 
-- `unsupported_availability_claim` also flags "quedás anotado", "te recibe" with a relative day, "disponibilidad" with a time reference, "nos vemos el viernes 23", "there's availability", "I booked you in", and "for the 5th". A cancellation policy ("hasta 24 horas antes", "up to 24 hours before") is not a slot. On 2026-10-17 a handwritten sample of new phrases caught 14 of 20 claims and 1 of 18 clean sentences, before these patterns. That recall was not remeasured.
+- `unsupported_availability_claim` also flags "quedás anotado", "te recibe" with a relative day, "disponibilidad" with a time reference, "nos vemos el viernes 23", "there's availability", "I booked you in", and "for the 5th". A cancellation policy ("hasta 24 horas antes", "up to 24 hours before") is not a slot. The 14/20 figure cited with this release is an earlier handwritten set, measured before these patterns, not a later unseen set.
 
 ## [0.1.4] - 2026-10-17
 
