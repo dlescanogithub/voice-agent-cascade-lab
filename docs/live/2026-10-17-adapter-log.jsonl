@@ -1,0 +1,60 @@
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Quiero agendar un turno de consulta general.", "utterance": "Quiero agendar un turno de consulta general."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1674500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 177, "audio_bytes": 169728}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "¿Qué horarios hay disponibles para consulta general?", "utterance": "Qué horarios hay disponibles para consulta general."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1562000}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 168, "audio_bytes": 159360}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Me duele la cabeza, ¿qué medicamento tomo?", "utterance": "Me duele la cabeza, qué medicamento tomo."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 2749500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 387, "audio_bytes": 374400}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "Necesito cancelar mi turno de mañana.", "utterance": "Necesito cancelar mi turno de mañana."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1999500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 231, "audio_bytes": 226176}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "¿Tienen lugar para el viernes?", "utterance": "¿Tienen lugar para el viernes?"}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1762000}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 214, "audio_bytes": 195456}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "Quiero cambiar mi turno para la semana que viene.", "utterance": "Quiero cambiar mi turno para la semana que viene."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 2287000}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 272, "audio_bytes": 261888}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "Buenas, quiero reservar una consulta.", "utterance": "Buenas, quiero reservar una consulta."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1549500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 149, "audio_bytes": 144000}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "¿A qué hora atienden los sábados?", "utterance": "¿A qué hora atienden los sábados?"}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1174500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 77, "audio_bytes": 72576}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "Cancélame el turno, por favor.", "utterance": "Cancelame el turno, por favor."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 2818500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 151, "audio_bytes": 144000}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "¿Me puedo anotar para el lunes a la tarde?", "utterance": "Me puedo anotar para el lunes a la tarde."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1637000}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 179, "audio_bytes": 169728}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "Tengo fiebre, ¿qué tomo?", "utterance": "Tengo fiebre, ¿qué tomo?"}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1912000}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 200, "audio_bytes": 200448}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.656, "match": true, "transcript": "¿Hay turnos libres hoy?", "utterance": "¿Hay turnos libres hoy?"}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1574500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 173, "audio_bytes": 159360}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Quiero un turno con el doctor para esta semana.", "utterance": "Quiero un turno con el doctor para esta semana."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1837000}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 214, "audio_bytes": 195456}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Anótame para consulta general el martes.", "utterance": "Anotame para consulta general el martes."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1699500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 160, "audio_bytes": 149376}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "No puedo ir al turno, lo quiero cancelar.", "utterance": "No puedo ir al turno, lo quiero cancelar."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1974500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 55, "audio_bytes": 57216}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "¿Cuánto dura una consulta general?", "utterance": "¿Cuánto dura una consulta general?"}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1612000}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 179, "audio_bytes": 174720}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "Necesito reprogramar mi consulta.", "utterance": "Necesito reprogramar mi consulta."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 2024500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 249, "audio_bytes": 256896}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Quiero saber si hay lugar el jueves por la mañana.", "utterance": "Quiero saber si hay lugar el jueves por la mañana."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1699500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 188, "audio_bytes": 169728}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "¿Me confirmás el turno que pedí?", "utterance": "¿Me confirmás el turno que pedí?"}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1787000}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 197, "audio_bytes": 200448}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "Hola, quiero sacar un turno.", "utterance": "Hola, quiero sacar un turno."}
+{"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1349500}
+{"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 122, "audio_bytes": 113280}

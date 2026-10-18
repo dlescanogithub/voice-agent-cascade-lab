@@ -1,0 +1,50 @@
+1
+00:00:00,880 --> 00:00:04,080
+The README's latency numbers are simulated.
+
+2
+00:00:04,150 --> 00:00:06,750
+So I measured a real voice cascade.
+
+3
+00:00:07,110 --> 00:00:13,750
+The repo can't call xAI speech, so I wrote a scratch adapter. It is not in the
+repo.
+
+4
+00:00:13,860 --> 00:00:16,200
+The repo's own code does the timing.
+
+5
+00:00:16,840 --> 00:00:22,580
+Twenty utterances, each through speech-to-text, the model, and text-to-speech.
+
+6
+00:00:22,610 --> 00:00:25,630
+Real calls, one provider, one run.
+
+7
+00:01:00,290 --> 00:01:07,030
+End to end, median two thousand twenty-two milliseconds, p95 two thousand five
+hundred eighty-eight.
+
+8
+00:01:07,060 --> 00:01:12,180
+Speech, model, voice: real. Turn detection: simulated, not counted.
+
+9
+00:01:12,270 --> 00:01:15,930
+One reply tripped the repo's check. Cost: six cents.
+
+10
+00:01:17,070 --> 00:01:21,120
+For a client: shadow mode first, then a gated write.
+
+11
+00:01:21,250 --> 00:01:25,620
+Risk: a twenty-turn p95 read as a service level.
+
+12
+00:01:25,860 --> 00:01:31,240
+ROI: [EST], about twenty-nine hundred currency units a month, gross.
+

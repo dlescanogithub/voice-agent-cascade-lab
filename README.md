@@ -6,7 +6,7 @@ Offline lab that tests a simulated STT → LLM → TTS cascade for appointment s
 
 > **Honest limits.** The harness computes and gates a latency budget. The p50 and p95 figures below are **SIMULATED** placeholders from a seeded lognormal clock (parameters marked [EST]). They are not a measurement of a speech, language, or synthesis service. The aggressive false-cut rate of 1.0 is **SIMULATED** and holds by construction: the synthetic noise sits above that profile's energy threshold. No microphone, no telephone, and no live provider is called by `eval`, `demo`, or CI.
 >
-> An optional real-provider run is off by default and is not part of CI. Export `LIVE_MODE=1` and the variables in `.env.example`, then run `python -m voice_cascade live`. Missing config, or a cost estimate above `MAX_LIVE_SPEND_USD`, exits 2 and sends no request. The table [Measured with real providers](#measured-with-real-providers) stays empty until a pasted run is titled exactly that. Do not commit keys.
+> An optional real-provider run is off by default and is not part of CI. Export `LIVE_MODE=1` and the variables in `.env.example`, then run `python -m voice_cascade live`. Missing config, or a cost estimate above `MAX_LIVE_SPEND_USD`, exits 2 and sends no request. One such run is in [Measured with real providers](#measured-with-real-providers): n=20, one provider, one run, not an SLA. Do not commit keys.
 >
 > `unsupported_availability_claim` is a heuristic. Four handwritten sets, n=20 each, scored 11/20, 15/20, 14/20, and 16/20. The intervals overlap, so those rates are not an improvement. Recall after the latest patterns is not measured yet. Patterns and the labeled samples are in [docs/HEURISTIC_RECALL.md](docs/HEURISTIC_RECALL.md).
 
@@ -18,15 +18,23 @@ On the fictional **Clínica Aurora** (scheduling only, never clinical advice) th
 
 **SIMULATED placeholder, 2026-10-17**, package version **0.1.9**, command `python -m voice_cascade eval` (balanced profile). git revision: `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. The same command on that revision prints these percentiles.
 
-The harness computes and gates a latency budget. **p95 end-to-end: 1004.5 ms (SIMULATED)** against a budget of 2500 ms. **p50 end-to-end: 896 ms (SIMULATED)**. These two percentiles differ because each stage is a seeded draw, not a constant. They are placeholders until real providers are measured. The same command exits 0 only when the invariant gate passes: task completed or escalated, no double booking, no clinical advice, PII redacted, latency budget held, eligible barge-ins cancelled.
+The harness computes and gates a latency budget. **p95 end-to-end: 1004.5 ms (SIMULATED)** against a budget of 2500 ms. **p50 end-to-end: 896 ms (SIMULATED)**. These two percentiles differ because each stage is a seeded draw, not a constant. They are SIMULATED placeholders. The measured table later in this file is a different run and is not a comparison. The same command exits 0 only when the invariant gate passes: task completed or escalated, no double booking, no clinical advice, PII redacted, latency budget held, eligible barge-ins cancelled.
 
 ## Demo
+
+Offline, cost **zero**. No API key is read and no network call is made.
 
 ```bash
 python -m voice_cascade demo
 ```
 
-`make demo` is the same command. Cost of the demo: **zero**. No API key is read and no network call is made.
+`make demo` is the same command.
+
+Short demo in English. It includes a real-provider latency run on a single provider, n=20, not an SLA.
+
+- [video](docs/demo/voice_agent_cascade_lab_demo_en_v2_real.mp4)
+- [English captions](docs/demo/voice_agent_cascade_lab_demo_en_v2_real.en.srt)
+- [Spanish captions](docs/demo/voice_agent_cascade_lab_demo_en_v2_real.es.srt)
 
 ## Business case
 
@@ -53,7 +61,7 @@ The fake LLM does not read free text as a model. It folds the transcript, picks 
 
 ## SIMULATED latency report
 
-All figures below are **SIMULATED** placeholders, from `python -m voice_cascade eval` and `python -m voice_cascade latency-report`. Date: 2026-10-17. Version: 0.1.9. Seed: 42. Percentiles use the inclusive linear method (NumPy type 7) on the 36-call latency cohort. git revision: `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. The harness computes and gates a latency budget. The numbers themselves are placeholders until real providers are measured.
+All figures below are **SIMULATED** placeholders, from `python -m voice_cascade eval` and `python -m voice_cascade latency-report`. Date: 2026-10-17. Version: 0.1.9. Seed: 42. Percentiles use the inclusive linear method (NumPy type 7) on the 36-call latency cohort. git revision: `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. The harness computes and gates a latency budget. The numbers themselves are SIMULATED placeholders. They are not the measured run later in this file.
 
 Draws are lognormal. The median is exp(mu). Sigma is the standard deviation of the underlying normal. Box-Muller on `random.Random.random()` keeps Python 3.11 and 3.12 on the same values. Samples are not capped at the budget. The floor is 1 ms. Parameters are **[EST]**.
 
@@ -186,7 +194,7 @@ Threat notes: [SECURITY.md](SECURITY.md). The demo HMAC constant is not a creden
 ### What this does NOT do
 
 - It does not place or receive a phone call.
-- It does not, by itself, measure a live speech, language, or synthesis service. The table below stays empty unless every measured stage in the pasted run was real. A partial run stays in `var/live/` and is not copied here.
+- It does not, by itself, measure a live speech, language, or synthesis service. The table below is one pasted run in which every measured stage was real. A partial run stays in `var/live/` and is not copied here.
 - It does not give clinical advice, and it must not be used as a medical device.
 - It does not prove a production voice deployment. Nothing here was on a live queue.
 - It does not understand dates in free text. The cassette names the tool; the script supplies the slot id.
@@ -195,10 +203,18 @@ Threat notes: [SECURITY.md](SECURITY.md). The demo HMAC constant is not a creden
 
 ### Measured with real providers
 
-| Role | Calls | TTFB p50 (ms) | Total p50 (ms) | Price date | Date | Commit | Command |
+| Role | Calls | p50 (ms) | p95 (ms) | Price date | Date | Commit | Command |
 | --- | ---: | ---: | ---: | --- | --- | --- | --- |
+| STT, xAI, real | 20 | 245 | 281.5 | 2026-10-17 | 2026-10-17/18 | `84cfb1a` | `python -m voice_cascade live` |
+| LLM, xAI, grok-4.20-0309-non-reasoning | 20 | 798.5 | 1145.3 | 2026-10-17 | 2026-10-17/18 | `84cfb1a` | `python -m voice_cascade live` |
+| TTS, xAI, full audio (first byte p50 302 ms) | 20 | 993.5 | 1253.6 | 2026-10-17 | 2026-10-17/18 | `84cfb1a` | `python -m voice_cascade live` |
+| End-to-end, STT+LLM+TTS, real only | 20 | 2022.5 | 2587.7 | 2026-10-17 | 2026-10-17/18 | `84cfb1a` | `python -m voice_cascade live` |
 
-This table stays empty until a pasted run of `python -m voice_cascade live` is titled exactly `Measured with real providers`. A file titled `Partially measured: LLM real, STT/TTS stub` does not belong here. Stub stage times are not an end-to-end measurement. The command writes `var/live/results.json` and does not edit this file.
+Sixty HTTP calls, all status 200 (20 STT, 20 LLM, 20 TTS). The file title is `Measured with real providers`. A file titled `Partially measured: LLM real, STT/TTS stub` does not belong here. Stub stage times are not in the end-to-end row. The command writes `var/live/results.json` and does not edit this file. The copy used for these cells is [docs/live/2026-10-17-results.json](docs/live/2026-10-17-results.json).
+
+n=20, one provider, one run, not an SLA. VAD is simulated and the calendar tool does not run in live mode. Caller audio was synthesized with TTS, in Spanish, not a human voice. One response tripped `unsupported_availability_claim:S15`. `invariants.passed` is false, so the command exits 1. That failure is shown, not dropped. The run used a temporary adapter outside this repo. A rehearsal with the same code, [docs/live/2026-10-17-rehearsal.json](docs/live/2026-10-17-rehearsal.json), had end-to-end p50/p95 2050 / 3386.3 ms, so run-to-run variation is real. These rows are not compared with the SIMULATED table above.
+
+Cost for this run: LLM US$0.0036684 from `usage.cost_in_usd_ticks` (36,684,000 ticks, 1 tick = 1e-10 USD), which is about US$0.003668. STT+TTS about US$0.0575 estimated from list prices (49.296 audio seconds at US$0.10 per hour, plus 3742 characters at US$15 per 1M characters). The speech API does not report that dollar amount. Run total about US$0.0612. The results file does not store the model id; `grok-4.20-0309-non-reasoning` is the model named for this run in [docs/LIVE_RUN.md](docs/LIVE_RUN.md). List prices were read on 2026-10-18.
 
 `unsupported_availability_claim` is a heuristic. Four handwritten sets (n=20 each; intervals overlap; not an improvement) scored 11/20, 15/20, 14/20, and 16/20. Recall after the latest patterns is not measured yet. The pattern list and the labeled samples are in [docs/HEURISTIC_RECALL.md](docs/HEURISTIC_RECALL.md).
 
@@ -258,6 +274,7 @@ python -m voice_cascade live
 | [docs/METRICS.md](docs/METRICS.md) | What "good" means |
 | [docs/HEURISTIC_RECALL.md](docs/HEURISTIC_RECALL.md) | Availability patterns and the four handwritten recall sets |
 | [docs/COST.md](docs/COST.md) | Simulated row plus [EST] per-minute formula |
+| [docs/LIVE_RUN.md](docs/LIVE_RUN.md) | One measured xAI run, evidence files, no keys |
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Stuck webhook, growing DLQ, rollback |
 | [docs/architecture.md](docs/architecture.md) | Module map |
 | [docs/ADAPT_TO_A_REAL_CLIENT.md](docs/ADAPT_TO_A_REAL_CLIENT.md) | What to throw away first |

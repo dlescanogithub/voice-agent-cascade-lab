@@ -1,0 +1,1379 @@
+{
+  "chars_per_token_est": 4,
+  "complete": true,
+  "cost": {
+    "cached_tokens": 4992,
+    "cached_tokens_reported": true,
+    "cost_basis": "tokens_x_price, cached tokens priced separately",
+    "cost_in_usd_ticks": 36684000,
+    "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+    "estimated_rows": 20,
+    "estimated_usd": 0.0036684,
+    "input_tokens": 5464,
+    "output_tokens": 832,
+    "precall_estimate_usd": 0.079269,
+    "provider_cost_source": "usage.cost_in_usd_ticks",
+    "provider_reported_rows": 20,
+    "provider_reported_usd": 0.0036684
+  },
+  "invariants": {
+    "failures": [
+      "unsupported_availability_claim:S15"
+    ],
+    "passed": false
+  },
+  "latency": {
+    "e2e_real_only": {
+      "max_ms": 3170.602,
+      "min_ms": 1392.5589999999997,
+      "n": 20,
+      "p50_ms": 2022.5,
+      "p95_ms": 2587.7000000000007
+    },
+    "llm": {
+      "max_ms": 1189.065,
+      "min_ms": 576.906,
+      "n": 20,
+      "p50_ms": 798.5,
+      "p95_ms": 1145.3000000000002
+    },
+    "note": "Stub and unmeasured stage times are excluded from end-to-end.",
+    "stt": {
+      "max_ms": 290.167,
+      "min_ms": 230.829,
+      "n": 20,
+      "p50_ms": 245.0,
+      "p95_ms": 281.45000000000005
+    },
+    "tts": {
+      "max_ms": 1701.817,
+      "min_ms": 454.34,
+      "n": 20,
+      "p50_ms": 993.5,
+      "p95_ms": 1253.6000000000004
+    }
+  },
+  "max_spend_usd": 0.1,
+  "percentile_min_n": 20,
+  "precall_estimate_usd": 0.079269,
+  "price_date": "2026-10-17",
+  "stages": {
+    "llm": {
+      "endpoint": "https://api.x.ai/v1/chat/completions",
+      "provider": "api.x.ai",
+      "simulated": false,
+      "source": "real"
+    },
+    "stt": {
+      "endpoint": "https://api.x.ai/v1/stt",
+      "provider": "api.x.ai",
+      "simulated": false,
+      "source": "real"
+    },
+    "tool": {
+      "endpoint": "",
+      "included_in_e2e": false,
+      "note": "Live mode has no calendar tool.",
+      "provider": "not-run",
+      "simulated": true,
+      "source": "stub"
+    },
+    "tts": {
+      "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+      "provider": "api.x.ai",
+      "simulated": false,
+      "source": "real"
+    },
+    "vad": {
+      "endpoint": "",
+      "included_in_e2e": false,
+      "note": "Live mode does not run turn-taking.",
+      "provider": "not-run",
+      "simulated": true,
+      "source": "stub"
+    }
+  },
+  "title": "Measured with real providers",
+  "turns": [
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S1",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 780.649,
+        "ttfb_ms": 780.492,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1674500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00016745,
+          "input_tokens": 273,
+          "output_tokens": 38,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00016745
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 281.348,
+        "ttfb_ms": 281.264
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 984.907,
+        "ttfb_ms": 301.497
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S2",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 607.671,
+        "ttfb_ms": 607.548,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1562000,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.0001562,
+          "input_tokens": 272,
+          "output_tokens": 34,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.0001562
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 252.05,
+        "ttfb_ms": 251.983
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1047.612,
+        "ttfb_ms": 378.664
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S3",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1189.065,
+        "ttfb_ms": 1188.899,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 2749500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00027495,
+          "input_tokens": 275,
+          "output_tokens": 80,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00027495
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 279.72,
+        "ttfb_ms": 279.621
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1701.817,
+        "ttfb_ms": 288.608
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S4",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1143.236,
+        "ttfb_ms": 1143.107,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1999500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00019995,
+          "input_tokens": 273,
+          "output_tokens": 51,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00019995
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 236.806,
+        "ttfb_ms": 236.721
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1100.916,
+        "ttfb_ms": 303.86
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S5",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 922.475,
+        "ttfb_ms": 922.348,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1762000,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.0001762,
+          "input_tokens": 272,
+          "output_tokens": 42,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.0001762
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 244.764,
+        "ttfb_ms": 244.644
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 987.891,
+        "ttfb_ms": 302.758
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S6",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1091.454,
+        "ttfb_ms": 1091.303,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 2287000,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.0002287,
+          "input_tokens": 274,
+          "output_tokens": 62,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.0002287
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 243.646,
+        "ttfb_ms": 243.577
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1222.134,
+        "ttfb_ms": 283.416
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S7",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 826.409,
+        "ttfb_ms": 826.279,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1549500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00015495,
+          "input_tokens": 273,
+          "output_tokens": 33,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00015495
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 280.343,
+        "ttfb_ms": 280.27
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 879.204,
+        "ttfb_ms": 319.784
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S8",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 576.906,
+        "ttfb_ms": 576.791,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1174500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00011745,
+          "input_tokens": 275,
+          "output_tokens": 17,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00011745
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 237.695,
+        "ttfb_ms": 237.589
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 577.958,
+        "ttfb_ms": 294.558
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S9",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 612.775,
+        "ttfb_ms": 612.651,
+        "usage": {
+          "cached_tokens": 128,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 2818500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00028185,
+          "input_tokens": 273,
+          "output_tokens": 30,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00028185
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 237.857,
+        "ttfb_ms": 237.792
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 853.707,
+        "ttfb_ms": 324.838
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S10",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 824.932,
+        "ttfb_ms": 824.717,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1637000,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.0001637,
+          "input_tokens": 276,
+          "output_tokens": 35,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.0001637
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 259.462,
+        "ttfb_ms": 259.381
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 935.565,
+        "ttfb_ms": 313.825
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S11",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 717.581,
+        "ttfb_ms": 717.471,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1912000,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.0001912,
+          "input_tokens": 272,
+          "output_tokens": 48,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.0001912
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 268.244,
+        "ttfb_ms": 268.137
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1024.536,
+        "ttfb_ms": 304.295
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S12",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 754.062,
+        "ttfb_ms": 753.894,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1574500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00015745,
+          "input_tokens": 271,
+          "output_tokens": 35,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00015745
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 232.162,
+        "ttfb_ms": 232.068
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 953.465,
+        "ttfb_ms": 400.047
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S13",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 839.482,
+        "ttfb_ms": 839.362,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1837000,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.0001837,
+          "input_tokens": 274,
+          "output_tokens": 44,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.0001837
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 248.605,
+        "ttfb_ms": 248.529
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 999.431,
+        "ttfb_ms": 310.911
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S14",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 729.842,
+        "ttfb_ms": 729.725,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1699500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00016995,
+          "input_tokens": 273,
+          "output_tokens": 39,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00016995
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 232.678,
+        "ttfb_ms": 232.598
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 809.695,
+        "ttfb_ms": 286.165
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S15",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 885.858,
+        "ttfb_ms": 885.71,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1974500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00019745,
+          "input_tokens": 275,
+          "output_tokens": 49,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00019745
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 245.2,
+        "ttfb_ms": 245.123
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 454.34,
+        "ttfb_ms": 275.744
+      },
+      "unsupported_availability_claim": true,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S16",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 717.611,
+        "ttfb_ms": 717.486,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1612000,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.0001612,
+          "input_tokens": 272,
+          "output_tokens": 36,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.0001612
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 290.167,
+        "ttfb_ms": 290.084
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1139.441,
+        "ttfb_ms": 286.95
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S17",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 872.914,
+        "ttfb_ms": 872.726,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 2024500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00020245,
+          "input_tokens": 271,
+          "output_tokens": 53,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00020245
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 230.829,
+        "ttfb_ms": 230.659
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1229.693,
+        "ttfb_ms": 328.08
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S18",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 738.181,
+        "ttfb_ms": 738.025,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1699500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00016995,
+          "input_tokens": 275,
+          "output_tokens": 38,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00016995
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 248.548,
+        "ttfb_ms": 248.434
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1037.83,
+        "ttfb_ms": 263.378
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S19",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 815.816,
+        "ttfb_ms": 815.686,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1787000,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.0001787,
+          "input_tokens": 274,
+          "output_tokens": 42,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.0001787
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 231.924,
+        "ttfb_ms": 231.851
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 1188.3,
+        "ttfb_ms": 285.126
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    },
+    {
+      "calendar_tool_called": false,
+      "clinical_guard_replaced": false,
+      "id": "S20",
+      "llm": {
+        "endpoint": "https://api.x.ai/v1/chat/completions",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 745.966,
+        "ttfb_ms": 745.844,
+        "usage": {
+          "cached_tokens": 256,
+          "cached_tokens_reported": true,
+          "cost_basis": "tokens_x_price, cached tokens priced separately",
+          "cost_in_usd_ticks": 1349500,
+          "estimate_note": "Cached tokens were priced with LIVE_LLM_USD_PER_1K_CACHED_TOKENS. Uncached input tokens use the input price.",
+          "estimated_usd": 0.00013495,
+          "input_tokens": 271,
+          "output_tokens": 26,
+          "provider_cost_source": "usage.cost_in_usd_ticks",
+          "provider_reported_usd": 0.00013495
+        }
+      },
+      "stt": {
+        "endpoint": "https://api.x.ai/v1/stt",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 237.284,
+        "ttfb_ms": 237.195
+      },
+      "tool": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode has no calendar tool.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      },
+      "tts": {
+        "endpoint": "https://api.x.ai/v1/text-to-speech/leo",
+        "included_in_e2e": true,
+        "provider": "api.x.ai",
+        "simulated": false,
+        "source": "real",
+        "status": 200,
+        "total_ms": 723.536,
+        "ttfb_ms": 301.437
+      },
+      "unsupported_availability_claim": false,
+      "vad": {
+        "endpoint": "",
+        "included_in_e2e": false,
+        "note": "Live mode does not run turn-taking.",
+        "provider": "not-run",
+        "simulated": true,
+        "source": "stub"
+      }
+    }
+  ]
+}

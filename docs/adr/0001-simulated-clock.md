@@ -14,7 +14,7 @@ The eval path advances `SimulatedClock` by seeded lognormal draws. Medians and s
 
 ## Consequences
 
-p50 and p95 are properties of the script, the seed, and the [EST] law. They are comparable across machines. They are placeholders until the live command is run. They are not a service level. The README says so in the first box. A tighter budget fails the gate, so the percentile check is not vacuous.
+p50 and p95 are properties of the script, the seed, and the [EST] law. They are comparable across machines. They stay SIMULATED placeholders. One live run is recorded separately in the README and does not replace them. They are not a service level. The README says so in the first box. A tighter budget fails the gate, so the percentile check is not vacuous.
 
 ## Alternatives
 

@@ -5,7 +5,7 @@ Two layers. The first is what this repository measures. The second is what a pil
 ## SIMULATED latency report
 
 Command: `python -m voice_cascade eval` and `python -m voice_cascade latency-report`.
-Date of the placeholders in the README: 2026-10-17. Version 0.1.9. git revision `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. These are not provider measurements. The harness computes and gates a budget; the cells are placeholders from the seeded clock.
+Date of the placeholders in the README: 2026-10-17. Version 0.1.9. git revision `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. These are not provider measurements. The harness computes and gates a budget; the cells are placeholders from the seeded clock. A separate measured run is in the README section "Measured with real providers" and in [docs/LIVE_RUN.md](LIVE_RUN.md). It is not mixed into this table and it is not a comparison.
 
 | Metric | Operating target in this lab | Latest SIMULATED result |
 | --- | --- | --- |
