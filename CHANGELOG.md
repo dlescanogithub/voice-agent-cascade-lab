@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Docs only. The SIMULATED eval figures stay p50 896 ms and p95 1004.5 ms. The cited package version is 0.1.9 and the cited git revision is `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main.
+- One measured xAI run (2026-10-17/18, repo HEAD `84cfb1a`, n=20, not an SLA) is in the README table "Measured with real providers", with evidence in `docs/live/` and notes in `docs/LIVE_RUN.md`. The scratch adapter is not in the repo. A short English demo and captions are in `docs/demo/`.
 - The availability pattern list and the four handwritten recall sets (11/20, 15/20, 14/20, 16/20) are in `docs/HEURISTIC_RECALL.md`. The intervals overlap; those rates are not an improvement. Recall after the latest patterns is not measured yet.
 - Vulnerability reports use GitHub private vulnerability reporting. No email address is listed.
 
