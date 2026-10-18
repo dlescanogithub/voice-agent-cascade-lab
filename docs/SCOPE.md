@@ -30,4 +30,4 @@ Fictional pilot: Clínica Aurora scheduling. No fees, no statement of work, no v
 
 ## Exit criteria for the lab itself
 
-The lab is done for this version when CI runs lint, types, tests with coverage at least 80%, the eval gate, the secret scan, and the forced regression, and when the README numbers match the harness. It is not a production voice service. The Measured with real providers table stays empty until an owner runs `python -m voice_cascade live` outside CI.
+The lab is done for this version when CI runs lint, types, tests with coverage at least 80%, the eval gate, the secret scan, and the forced regression, and when the README numbers match the harness. It is not a production voice service. The Measured with real providers table stays empty until `python -m voice_cascade live` is run outside CI.

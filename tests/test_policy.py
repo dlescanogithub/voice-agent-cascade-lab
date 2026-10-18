@@ -20,7 +20,7 @@ MEASURED_PHRASES = (
     "p95 end-to-end (patient, SIMULATED): 1413.75 ms",
     "## Use cases, governance and business strategy",
     "### Measured with real providers",
-    "stays empty until the owner pastes",
+    "stays empty until a pasted run",
 )
 
 
