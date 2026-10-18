@@ -4,7 +4,7 @@ This repository is a local lab. It does not talk to a real clinic, a real phone 
 
 ## Reporting
 
-Email the maintainer privately. Do not open a public issue that contains keys, transcripts of real people, or a live webhook secret. This lab should never have those, and a report should not add them.
+Use GitHub private vulnerability reporting (Security tab, Report a vulnerability). Do not open a public issue that contains keys, transcripts of real people, or a live webhook secret. This lab should never have those, and a report should not add them.
 
 ## What is in scope
 

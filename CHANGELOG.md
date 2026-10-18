@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- Docs only. The SIMULATED eval figures stay p50 896 ms and p95 1004.5 ms. The cited package version is 0.1.9 and the cited git revision is `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main.
+- The availability pattern list and the four handwritten recall sets (11/20, 15/20, 14/20, 16/20) are in `docs/HEURISTIC_RECALL.md`. The intervals overlap; those rates are not an improvement. Recall after the latest patterns is not measured yet.
+- Vulnerability reports use GitHub private vulnerability reporting. No email address is listed.
+
 ## [0.1.9] - 2026-10-17
 
 - `unsupported_availability_claim` also flags "I've blocked" with a day and noon or an appointment, "you're booked" with a day, "have a slot" with a day, and "on the calendar" with a day and a time. Cancellation, reschedule, fasting, and rest phrases stay quiet.

@@ -24,7 +24,7 @@ Ask these before choosing a model, a telephony vendor, or a VAD profile. Each an
    Options the lab already distinguishes: retry the same key, dead-letter and escalate, or return the booking that actually committed (slow response). The client has to pick one. "Try again and hope" is the double-book bug.
 
 8. **What end-to-end latency will the operation accept, and who feels it?**
-   The SIMULATED balanced p95 is 1004.5 ms (placeholder from the seeded clock, 2026-10-17, `python -m voice_cascade eval`, version 0.1.1). It is not a provider measurement. A human target might be looser or tighter. The VAD profile is the first knob: aggressive is faster and fails the false-cut gate by construction of the synthetic noise; patient is slower and still inside the lab budget of 2500 ms.
+   The SIMULATED balanced p95 is 1004.5 ms (placeholder from the seeded clock, 2026-10-17, `python -m voice_cascade eval`, version 0.1.9). It is not a provider measurement. A human target might be looser or tighter. The VAD profile is the first knob: aggressive is faster and fails the false-cut gate by construction of the synthetic noise; patient is slower and still inside the lab budget of 2500 ms.
 
 9. **How is the caller authenticated before a write?**
    The lab uses an opaque `patient_ref` from the script. If the real answer is "date of birth plus a phone", that is a new step before `book_appointment`, with its own redaction rules. If the answer is "anyone who calls", the write should stay off.

@@ -43,7 +43,7 @@ Until `stt_price`, `token_price`, and `tts_price` come from an official page wit
 ## What the lab already constrains
 
 - One intent. Extra intents are a new cassette and a new gate, not a prompt tweak in production.
-- p95 end-to-end on the balanced cohort is 1004.5 ms (SIMULATED placeholder), from 2026-10-17 with `python -m voice_cascade eval`, version 0.1.1. The harness gates a budget of 2500 ms. That ceiling is a lab limit, not a service target, and not a provider measurement.
+- p95 end-to-end on the balanced cohort is 1004.5 ms (SIMULATED placeholder), from 2026-10-17 with `python -m voice_cascade eval`, version 0.1.9. The harness gates a budget of 2500 ms. That ceiling is a lab limit, not a service target, and not a provider measurement.
 - A retry must not create a second active booking. That is an invariant, not a hope.
 - Containment counts only calls that finish as booked, slots offered, or cancelled. Escalations are not contained.
 

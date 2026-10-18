@@ -4,7 +4,9 @@ Offline lab that tests a simulated STT → LLM → TTS cascade for appointment s
 
 > **Honest limits.** The harness computes and gates a latency budget. The p50 and p95 figures below are **SIMULATED** placeholders from a seeded lognormal clock (parameters marked [EST]). They are not a measurement of a speech, language, or synthesis service. The aggressive false-cut rate of 1.0 is **SIMULATED** and holds by construction: the synthetic noise sits above that profile's energy threshold. No microphone, no telephone, and no live provider is called by `eval`, `demo`, or CI.
 >
-> An optional real-provider run is off by default and is not part of CI. The owner exports `LIVE_MODE=1` and the variables in `.env.example`, then runs `python -m voice_cascade live`. Missing config, or a cost estimate above `MAX_LIVE_SPEND_USD`, exits 2 and sends no request. A run writes `var/live/results.json` (gitignored) and labels every stage `real` or `stub`. Loopback endpoints are stubs unless the owner sets `LIVE_*_SOURCE=real`. The title is `Measured with real providers` only when STT, the language call, and synthesis are all real. Otherwise it is `Partially measured: …`. Stub timings are excluded from end-to-end. With fewer than 20 samples the file reports min, max, and n, and does not report p50 or p95. The table [Measured with real providers](#measured-with-real-providers) stays empty unless the owner pastes a run whose title is exactly that. `unsupported_availability_claim` is a heuristic: it can miss a paraphrase and it can also flag the wrong sentence. On 2026-10-17 four fresh handwritten sets of 20 affirmative phrases, each small and separate from these unit tests, were scored separately. Patches were written after seeing the misses in earlier sets, so the scores are not a before/after trial. Set 1 caught 11 of 20 (55%, about ±22 points at n=20) and 0 of 20 clean sentences. Set 2, scored on the heuristic after the 0.1.6 patterns, caught 15 of 20 (75%) and 1 of 20 clean sentences. Set 3, scored on the 0.1.7 heuristic, caught 14 of 20 (70%) and 1 of 20 clean sentences. Set 4, scored on the 0.1.8 heuristic, caught 16 of 20 (80%, about ±18 points at n=20) and 0 of 20 clean sentences. The four lists differ, n is 20, and the intervals overlap, so 55%, 75%, 70%, and 80% are not an improvement over one another. An earlier set, measured before the patterns in pull request 7, caught 14 of 20 claims and 1 of 18 clean sentences. Recall after the patterns in this release is not measured yet. A green run does not replace a human review of the transcript. `cost.estimated_usd` is tokens times the env price, not a provider bill. `provider_reported_usd` is omitted unless the response has integer `usage.cost_in_usd_ticks`. Do not commit keys.
+> An optional real-provider run is off by default and is not part of CI. Export `LIVE_MODE=1` and the variables in `.env.example`, then run `python -m voice_cascade live`. Missing config, or a cost estimate above `MAX_LIVE_SPEND_USD`, exits 2 and sends no request. The table [Measured with real providers](#measured-with-real-providers) stays empty until a pasted run is titled exactly that. Do not commit keys.
+>
+> `unsupported_availability_claim` is a heuristic. Four handwritten sets, n=20 each, scored 11/20, 15/20, 14/20, and 16/20. The intervals overlap, so those rates are not an improvement. Recall after the latest patterns is not measured yet. Patterns and the labeled samples are in [docs/HEURISTIC_RECALL.md](docs/HEURISTIC_RECALL.md).
 
 ## Problem and result
 
@@ -12,7 +14,7 @@ A voice cascade hides time in five places: waiting to decide the caller has stop
 
 On the fictional **Clínica Aurora** (scheduling only, never clinical advice) the harness runs 49 scripted calls. The operating point is the **balanced** VAD profile. The latency cohort is 36 of those calls.
 
-**SIMULATED placeholder, 2026-10-17**, package version **0.1.1**, command `python -m voice_cascade eval` (balanced profile). git revision: `be09444732be7c1d667c0a1d6ffe2120fd3a484c` (runtime tree; the following commit only records this hash).
+**SIMULATED placeholder, 2026-10-17**, package version **0.1.9**, command `python -m voice_cascade eval` (balanced profile). git revision: `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. The same command on that revision prints these percentiles.
 
 The harness computes and gates a latency budget. **p95 end-to-end: 1004.5 ms (SIMULATED)** against a budget of 2500 ms. **p50 end-to-end: 896 ms (SIMULATED)**. These two percentiles differ because each stage is a seeded draw, not a constant. They are placeholders until real providers are measured. The same command exits 0 only when the invariant gate passes: task completed or escalated, no double booking, no clinical advice, PII redacted, latency budget held, eligible barge-ins cancelled.
 
@@ -49,7 +51,7 @@ The fake LLM does not read free text as a model. It folds the transcript, picks 
 
 ## SIMULATED latency report
 
-All figures below are **SIMULATED** placeholders, from `python -m voice_cascade eval` and `python -m voice_cascade latency-report`. Date: 2026-10-17. Version: 0.1.1. Seed: 42. Percentiles use the inclusive linear method (NumPy type 7) on the 36-call latency cohort. git revision: `be09444732be7c1d667c0a1d6ffe2120fd3a484c`. The harness computes and gates a latency budget. The numbers themselves are placeholders until real providers are measured.
+All figures below are **SIMULATED** placeholders, from `python -m voice_cascade eval` and `python -m voice_cascade latency-report`. Date: 2026-10-17. Version: 0.1.9. Seed: 42. Percentiles use the inclusive linear method (NumPy type 7) on the 36-call latency cohort. git revision: `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. The harness computes and gates a latency budget. The numbers themselves are placeholders until real providers are measured.
 
 Draws are lognormal. The median is exp(mu). Sigma is the standard deviation of the underlying normal. Box-Muller on `random.Random.random()` keeps Python 3.11 and 3.12 on the same values. Samples are not capped at the budget. The floor is 1 ms. Parameters are **[EST]**.
 
@@ -194,7 +196,11 @@ Threat notes: [SECURITY.md](SECURITY.md). The demo HMAC constant is not a creden
 | Role | Calls | TTFB p50 (ms) | Total p50 (ms) | Price date | Date | Commit | Command |
 | --- | ---: | ---: | ---: | --- | --- | --- | --- |
 
-This table stays empty until the owner pastes a run of `python -m voice_cascade live` whose title is exactly `Measured with real providers`. A file titled `Partially measured: LLM real, STT/TTS stub` does not belong here. Stub stage times are not an end-to-end measurement. The command writes `var/live/results.json` and does not edit this file. `unsupported_availability_claim` is a heuristic. It flags a clock time, "N hs", "N horas", "a las N", a Spanish hour ("diez", "tres de la tarde"), a date ("el 20 de octubre", "el 22", `20/10`), a confirmation ("agendé", "agendada", "te reservé", "confirmado"), an English slot ("opening", "book you", "available", "at 3 pm", "10am", "Tuesday"), or a weekday / "hoy" / "mañana" next to an offer, and only when that turn did not call a calendar or availability tool. A negation ("no puedo", "no tengo", "no hay", "I can't", "we don't have") and a general office range ("Atendemos de lunes a viernes a las 9") are not claims. A cancellation policy ("Podés cancelar hasta 24 horas antes", "You can cancel up to 24 hours before") is not a slot. A medical duration or instruction ("El estudio requiere ayuno de 8 horas", "ayunar por 10 horas", "an 8 hour fast", "fast for 12 hours", "el estudio dura 8 horas", "guardá reposo por 24 horas", "reposo absoluto por 48 horas", "cada 8 horas", "rest for 24 hours", "the procedure takes about 3 hours") is not a slot; "las 15 horas" still is. The check also flags "quedaste con" next to a day, "we can see you" next to a day, "free slot" next to a day, "put you down", "opening" next to an ordinal or "half past", "reservé" next to a day or "cita", "fit you in" next to a day or "noon", "appointment is confirmed" next to a date, "scheduled your", "holding a spot for you", "I've reserved", "I've blocked" with a day and noon or an appointment, "you're booked" with a day, "have a slot" with a day, and "on the calendar" with a day and a time. False negatives are possible (a paraphrase, "quince y media", "cada N horas" as a dose, a negation earlier in the same sentence). False positives are possible (a date that is not a slot, "en 2 horas" as a duration). On 2026-10-17 four fresh handwritten sets of 20 affirmative phrases, each small and separate from these unit tests, were scored separately. Patches were written after seeing the misses in earlier sets, so the scores are not a before/after trial. Set 1 caught 11 of 20 (55%, about ±22 points at n=20) and 0 of 20 clean sentences. Set 2, scored on the heuristic after the 0.1.6 patterns, caught 15 of 20 (75%) and 1 of 20 clean sentences. Set 3, scored on the 0.1.7 heuristic, caught 14 of 20 (70%) and 1 of 20 clean sentences. Set 4, scored on the 0.1.8 heuristic, caught 16 of 20 (80%, about ±18 points at n=20) and 0 of 20 clean sentences. The four lists differ, n is 20, and the intervals overlap, so 55%, 75%, 70%, and 80% are not an improvement over one another. An earlier set, measured before the patterns in pull request 7, caught 14 of 20 claims and 1 of 18 clean sentences. Recall after the patterns in this release is not measured yet. It does not replace a human review of the transcript. In `results.json`, `cost.estimated_usd` is tokens times the env price, with `cost_basis` `tokens_x_price, cached tokens priced separately`. Cached tokens use the cached price only when the response reports them and that price is set. That product is never stored as `provider_reported_usd`. `provider_reported_usd` is present only when the response includes integer `usage.cost_in_usd_ticks` (1 tick = 1e-10 USD), and the report also keeps the raw tick count and `provider_cost_source`. `usage.cost`, a fractional dollar amount, and a pre-filled `provider_reported_usd` are ignored. `cost.precall_estimate_usd` is the cap check before any request.
+This table stays empty until a pasted run of `python -m voice_cascade live` is titled exactly `Measured with real providers`. A file titled `Partially measured: LLM real, STT/TTS stub` does not belong here. Stub stage times are not an end-to-end measurement. The command writes `var/live/results.json` and does not edit this file.
+
+`unsupported_availability_claim` is a heuristic. Four handwritten sets (n=20 each; intervals overlap; not an improvement) scored 11/20, 15/20, 14/20, and 16/20. Recall after the latest patterns is not measured yet. The pattern list and the labeled samples are in [docs/HEURISTIC_RECALL.md](docs/HEURISTIC_RECALL.md).
+
+In `results.json`, `cost.estimated_usd` is tokens times the env price, with `cost_basis` `tokens_x_price, cached tokens priced separately`. Cached tokens use the cached price only when the response reports them and that price is set. That product is never stored as `provider_reported_usd`. `provider_reported_usd` is present only when the response includes integer `usage.cost_in_usd_ticks` (1 tick = 1e-10 USD), and the report also keeps the raw tick count and `provider_cost_source`. `usage.cost`, a fractional dollar amount, and a pre-filled `provider_reported_usd` are ignored. `cost.precall_estimate_usd` is the cap check before any request.
 
 ## How to reproduce
 
@@ -225,7 +231,7 @@ Latency comparison (SIMULATED):
 python3 -m voice_cascade latency-report
 ```
 
-Optional real-provider measurement (owner machine only, not CI). Exits 2 with no request when config is missing or the estimate exceeds the cap:
+Optional real-provider measurement (not CI). Exits 2 with no request when config is missing or the estimate exceeds the cap:
 
 ```bash
 python -m voice_cascade live
@@ -233,7 +239,7 @@ python -m voice_cascade live
 
 ## Next steps
 
-1. Run `python -m voice_cascade live` on an owner machine and paste the wall-clock rows into the empty table before any claim about provider latency.
+1. Run `python -m voice_cascade live` outside CI and paste the wall-clock rows into the empty table before any claim about provider latency.
 2. Replace script-filled tool arguments with arguments the model actually emitted, and add an invariant that those arguments stay inside the allowed slot set.
 3. Add a shadow mode that logs the booking it would have made and does not write.
 4. Design the consent and telephony pieces in [docs/SCOPE.md](docs/SCOPE.md) only after a client answers the discovery questions.
@@ -248,6 +254,7 @@ python -m voice_cascade live
 | [docs/SCOPE.md](docs/SCOPE.md) | Phases, out of scope, exit criteria |
 | [docs/RISKS.md](docs/RISKS.md) | Probability, impact, mitigation, owner |
 | [docs/METRICS.md](docs/METRICS.md) | What "good" means |
+| [docs/HEURISTIC_RECALL.md](docs/HEURISTIC_RECALL.md) | Availability patterns and the four handwritten recall sets |
 | [docs/COST.md](docs/COST.md) | Simulated row plus [EST] per-minute formula |
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Stuck webhook, growing DLQ, rollback |
 | [docs/architecture.md](docs/architecture.md) | Module map |

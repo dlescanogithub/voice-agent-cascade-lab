@@ -1,6 +1,6 @@
 # Cost
 
-Local commands cost **zero**. `eval` does not call a provider. Latency cells marked SIMULATED were produced by `python -m voice_cascade eval` and `python -m voice_cascade latency-report` on 2026-10-17, package 0.1.1. They are placeholders from a seeded clock, not a service level. Money cells are **[EST]** unless a URL and a retrieval date are in the last column. None are. The live command prices its own estimate from environment variables and a price date; that table in the README stays empty until the owner runs it.
+Local commands cost **zero**. `eval` does not call a provider. Latency cells marked SIMULATED were produced by `python -m voice_cascade eval` and `python -m voice_cascade latency-report` on 2026-10-17, package 0.1.9, git revision `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. They are placeholders from a seeded clock, not a service level. Money cells are **[EST]** unless a URL and a retrieval date are in the last column. None are. The live command prices its own estimate from environment variables and a price date; that table in the README stays empty until a live run is pasted there.
 
 | Scenario | Model / provider | Tokens or units | Cost / run | p50 / p95 latency | Quality | Price date / source |
 | --- | --- | --- | --- | --- | --- | --- |
