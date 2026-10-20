@@ -2,6 +2,12 @@
 
 [![ci](https://github.com/dlescanogithub/voice-agent-cascade-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/dlescanogithub/voice-agent-cascade-lab/actions/workflows/ci.yml)
 
+**TL;DR**
+
+- Offline lab that tests a simulated STT → LLM → TTS cascade for appointment scheduling: where the latency goes, and whether a tool webhook can retry without booking twice.
+- On 49 scripted calls the balanced VAD profile passes the invariant gate (no double booking, no clinical advice, latency budget held). Latency figures are SIMULATED placeholders, not a live measurement.
+- Run `python -m voice_cascade demo`, or start at [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
+
 Offline lab that tests a simulated STT → LLM → TTS cascade for appointment scheduling: where the latency goes, and whether a tool webhook can retry without booking twice.
 
 > **Honest limits.** The harness computes and gates a latency budget. The p50 and p95 figures below are **SIMULATED** placeholders from a seeded lognormal clock (parameters marked [EST]). They are not a measurement of a speech, language, or synthesis service. The aggressive false-cut rate of 1.0 is **SIMULATED** and holds by construction: the synthetic noise sits above that profile's energy threshold. No microphone, no telephone, and no live provider is called by `eval`, `demo`, or CI.
