@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Docs: design for VAD/barge-in, per-stage latency and webhook failure runbook (no code yet).
 - README opens with a three-line TL;DR under the title and badges.
 - Docs only. The SIMULATED eval figures stay p50 896 ms and p95 1004.5 ms. The cited package version is 0.1.9 and the cited git revision is `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main.
 - One measured xAI run (2026-10-17/18, repo HEAD `84cfb1a`, n=20, not an SLA) is in the README table "Measured with real providers", with evidence in `docs/live/` and notes in `docs/LIVE_RUN.md`. The scratch adapter is not in the repo. A short English demo and captions are in `docs/demo/`.

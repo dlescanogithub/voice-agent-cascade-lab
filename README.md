@@ -282,6 +282,7 @@ python -m voice_cascade live
 | [docs/COST.md](docs/COST.md) | Simulated row plus [EST] per-minute formula |
 | [docs/LIVE_RUN.md](docs/LIVE_RUN.md) | One measured xAI run, evidence files, no keys |
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Stuck webhook, growing DLQ, rollback |
+| [docs/design/VOICE_EXTENSION_DESIGN.md](docs/design/VOICE_EXTENSION_DESIGN.md) | Design for VAD/barge-in, per-stage latency and webhook failures (no code yet) |
 | [docs/architecture.md](docs/architecture.md) | Module map |
 | [docs/ADAPT_TO_A_REAL_CLIENT.md](docs/ADAPT_TO_A_REAL_CLIENT.md) | What to throw away first |
 | [docs/PROVENANCE.md](docs/PROVENANCE.md) | Eval-kit lineage |
