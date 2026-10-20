@@ -57,6 +57,7 @@ What this extension adds, and why:
 ```python
 class VadBackend(Protocol):
     name: str
+
     def reset(self) -> None: ...
     def speech_prob(self, window: Sequence[int]) -> float:
         """Probability in [0, 1] for one 512-sample window."""
