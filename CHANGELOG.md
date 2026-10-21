@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-21
+
 - Package 0.2.0. Offline voice extension: energy VAD on synthetic PCM, turn-taking state machine, barge-in cancel, SIMULATED 100-call latency report (p50/p95 labelled SIMULATED, with a seeded bootstrap interval), webhook v2 (signed timestamp, retry classes, full jitter, tool deadline, W01–W12), correlation logs, and `trace`.
 - `python -m voice_cascade eval-voice` writes `docs/voice/SIMULATED_LATENCY.md`. `live --dry-run` prints an [EST] cost and sends no request. Silero is an optional marker, off by default, and does not download weights.
 - Decisions D1–D5 stay open. The offline defaults are recorded in `docs/voice/OPEN_DECISIONS.md` (L1, DSP audio, bundle D, manual Silero, v1 signatures accepted and deprecated).
