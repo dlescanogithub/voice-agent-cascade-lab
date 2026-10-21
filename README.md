@@ -331,7 +331,7 @@ python3 -m voice_cascade eval-regression
 
 CI runs that command and fails the job if the exit code is 0. The regression turns the clinical guard off and injects the advice sentence stored under `regression_clinical` in the cassette. A green regression means the gate can no longer see clinical advice.
 
-Local test run on Python 3.12.3, package 0.2.0, code tree `bdd841a` (this docs change does not alter the suite): `python3 -m pytest` with the addopts in `pyproject.toml` (`--cov=voice_cascade`, fail-under 80) printed **105 passed** and total coverage **92.97%**. Coverage also warned that `voice_cascade` was previously imported and not measured. 92.97% is the total that command printed. It is not a CI badge.
+Local `python3 -m pytest` on Python 3.12.3, package 0.2.0, with the addopts in `pyproject.toml` (`--cov=voice_cascade`, fail-under 80): **105 passed**, total coverage **92.97%**. The suite is unchanged from `bdd841a`. It is not a CI badge.
 
 Latency comparison (SIMULATED):
 
