@@ -220,7 +220,8 @@ def test_slow_after_commit_is_idempotent(tmp_path: Path) -> None:
 
 def test_backoff_cap() -> None:
     capped = delay_for(8, seed=1, key="k", base=40, cap=50, jitter=30)
-    assert capped == 50
+    assert 0 <= capped <= 50
+    assert delay_for(8, seed=1, key="k", base=40, cap=50, jitter=0) == 50
 
 
 def test_out_of_order_release_does_not_double_book(tmp_path: Path) -> None:
@@ -294,9 +295,15 @@ def test_rejected_status_does_not_retry(tmp_path: Path) -> None:
         settings,
     )
     result = client.invoke(_book("slot-a", "pat-1", "key-a"))
-    assert result["error"] == "rejected"
+    assert result["error"] == "dead_lettered"
+    assert result["error_class"] == "auth_failed"
     assert result["attempts"] == 1
+    assert result["alert"] is True
     assert clock.now_ms == 5
+    letters = client.dlq.read_all()
+    assert len(letters) == 1
+    assert letters[0]["error_class"] == "auth_failed"
+    assert letters[0]["replayable"] is False
     store.close()
 
 

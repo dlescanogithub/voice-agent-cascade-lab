@@ -126,6 +126,39 @@ False-cut rate is noise bursts during TTS that cancelled playback, divided by no
 | R04 | timeout before commit | escalated, one dead letter, no booking |
 | R05 | slow response after commit | retry returns the same booking |
 
+## Voice extension (0.2.0, SIMULATED)
+
+Offline only. No provider call. The 49-script table above is unchanged (package 0.1.9 clock). This extension adds a second path:
+
+- Energy VAD on synthetic 16 kHz PCM, three profiles, a turn state machine, barge-in cancel, and a played-text history check.
+- A 100-call cohort. Every latency cell is labelled **SIMULATED**, with a seeded bootstrap interval on p95. It is not compared with the measured table later in this file.
+- Webhook cases W01–W12 (signed timestamp, retry classes, tool deadline, full jitter, dead letters). The runbook rows are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
+
+Regenerate the report (cost zero):
+
+```bash
+python -m voice_cascade eval-voice
+```
+
+The report lives in [docs/voice/SIMULATED_LATENCY.md](docs/voice/SIMULATED_LATENCY.md). A SIMULATED trace for a failed booking is in [docs/voice/TRACE_W01.md](docs/voice/TRACE_W01.md). Open decisions D1–D5, with the offline defaults, are in [docs/voice/OPEN_DECISIONS.md](docs/voice/OPEN_DECISIONS.md). Silero is an optional marker and is off: [docs/voice/SILERO.md](docs/voice/SILERO.md).
+
+`python -m voice_cascade live --dry-run` prints an **[EST]** cost for planning bundle D at size L1 and sends no request. It exits 2 when that estimate is above `MAX_LIVE_SPEND_USD` or the cap is unset.
+
+| Case | What is injected | Result in the gate |
+| --- | --- | --- |
+| W01 | timeout before commit, 3 times | no booking, one dead letter `timeout` |
+| W02 | slow response after commit | same booking id |
+| W03 | two 503s then 200 | one booking, 3 attempts |
+| W04 | 503 with Retry-After 2s | wait capped at `backoff_cap_ms` |
+| W05 | persistent 500 | dead letter `http_5xx` inside the tool bound |
+| W06 | truncated JSON | 400, zero retries, `poison_payload` |
+| W07 | `slot_id` as a list | 400 `bad_args`, zero retries |
+| W08 | missing idempotency key | 400, zero retries |
+| W09 | JSON key order changed after signing | 401 `bad_signature`, alert |
+| W10 | secret rotated on one side | 401 until `previous` is set, then success |
+| W11 | capture 10 minutes old | 401 `stale_timestamp` |
+| W12 | duplicate delivery after success | `idempotent_replay` |
+
 ## Use cases, governance and business strategy
 
 ### 1. Use cases
@@ -155,7 +188,9 @@ Client-style use cases are fictional. They are patterns, not accounts.
 | PII redaction in JSON logs and traces | Implemented |
 | Optional live measurement (`python -m voice_cascade live`) | Implemented, off unless `LIVE_MODE=1`, not in CI |
 | Refuse-only flags that never send | Implemented, off by default |
-| Telephony, WebRTC, neural VAD, speech-to-speech, consent, multi-language | Design only |
+| PCM energy VAD, turn state machine, SIMULATED 100-call report, webhook v2 (W01–W12) | Implemented, offline only. Not a live deployment. |
+| Silero neural VAD | Optional marker, off by default, not in CI. Decision D4 open. |
+| Telephony, WebRTC, speech-to-speech, consent, multi-language | Design only |
 
 ### 2. Governance checklist
 
@@ -168,11 +203,15 @@ Client-style use cases are fictional. They are patterns, not accounts.
 | Costs | [docs/COST.md](docs/COST.md) |
 | Incident and rollback | [docs/RUNBOOK.md](docs/RUNBOOK.md) |
 | Secrets stay out of the tree | `secretscan.py`, `.env.example`, CI secret-scan job |
-| No paid call in CI | `LIVE_MODE` is unset in CI. Tests use a fake HTTP layer. `eval` does not open a socket. |
+| No paid call in CI | `LIVE_MODE` is unset in CI. Tests use a fake HTTP layer. `eval` does not open a socket. `live --dry-run` prints an [EST] and sends nothing. |
+| Interruptions do not keep unplayed text | `history_matches_playback` on the PCM state machine |
+| Tool calls are signed with a timestamp | `webhook.py` v2, ADR 0006. v1 still accepted by default (D5 open, deprecated). |
+| Non-retryable failures are not retried | W06–W11. A forced regression turns that off and must fail. |
+| SIMULATED and MEASURED stay in different tables | `provenance` on the voice report, and a test that rejects a mixed table |
+| Log lines for the voice path join to a call and a turn | `call_id`, `turn_id`, `trace --turn` |
 
 **Not covered yet**
 
-- Timestamp freshness on webhook retries (retries resend the same body on purpose).
 - Caller authentication beyond an opaque `patient_ref`.
 - Recording consent, retention, and a real legal hold.
 - A human queue UI for escalations.
@@ -192,6 +231,7 @@ The business problem is narrow: a scheduling queue spends handle time on one int
 - [0003 Webhook idempotency and dead letters](docs/adr/0003-webhook-idempotency.md)
 - [0004 Clinical guard before TTS](docs/adr/0004-clinical-guard.md)
 - [0005 Balanced VAD is the gated profile](docs/adr/0005-balanced-vad.md)
+- [0006 Signed webhook timestamp](docs/adr/0006-signed-webhook-timestamp.md)
 
 ## Security and known limits
 
@@ -282,7 +322,9 @@ python -m voice_cascade live
 | [docs/COST.md](docs/COST.md) | Simulated row plus [EST] per-minute formula |
 | [docs/LIVE_RUN.md](docs/LIVE_RUN.md) | One measured xAI run, evidence files, no keys |
 | [docs/RUNBOOK.md](docs/RUNBOOK.md) | Stuck webhook, growing DLQ, rollback |
-| [docs/design/VOICE_EXTENSION_DESIGN.md](docs/design/VOICE_EXTENSION_DESIGN.md) | Design for VAD/barge-in, per-stage latency and webhook failures (no code yet) |
+| [docs/design/VOICE_EXTENSION_DESIGN.md](docs/design/VOICE_EXTENSION_DESIGN.md) | Design for the voice extension. Offline parts are in 0.2.0. The paid live run is not. |
+| [docs/voice/SIMULATED_LATENCY.md](docs/voice/SIMULATED_LATENCY.md) | 100-call SIMULATED latency and turn-taking report |
+| [docs/voice/OPEN_DECISIONS.md](docs/voice/OPEN_DECISIONS.md) | D1–D5 defaults. None of them is closed. |
 | [docs/architecture.md](docs/architecture.md) | Module map |
 | [docs/ADAPT_TO_A_REAL_CLIENT.md](docs/ADAPT_TO_A_REAL_CLIENT.md) | What to throw away first |
 | [docs/PROVENANCE.md](docs/PROVENANCE.md) | Eval-kit lineage |

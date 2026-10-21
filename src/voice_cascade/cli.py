@@ -12,13 +12,19 @@ from voice_cascade import __version__
 from voice_cascade.booking import BookingStore
 from voice_cascade.clock import SimulatedClock
 from voice_cascade.config import Settings
+from voice_cascade.cost_estimate import dry_run_plan
 from voice_cascade.evalkit import EvalReport, evaluate
+from voice_cascade.fault_cohort import run_fault_cohort, trace_example, w06_shows_retries
 from voice_cascade.live import LiveConfigError, LiveRequestError, run_live
 from voice_cascade.logging_setup import configure_logging
 from voice_cascade.pipeline import SuiteResult, run_suite
 from voice_cascade.scenarios import build_scenarios
 from voice_cascade.secretscan import scan_path
+from voice_cascade.synth_audio import draw_calls, render_turn, write_clip
+from voice_cascade.trace_join import format_turn
 from voice_cascade.vad import PROFILES
+from voice_cascade.voice_cohort import cohort_document, echo_guard_off_rate, run_cohort
+from voice_cascade.voice_report import write_voice_reports
 from voice_cascade.webhook import (
     InProcessTransport,
     JsonlDeadLetterQueue,
@@ -79,11 +85,78 @@ def _run(
     return result, report
 
 
+DECISIONS_NOTE = (
+    "Open decisions, not resolved: D1 default L1 (100x1) for the dry-run estimate; "
+    "D2 default offline DSP audio (no paid TTS); D3 default bundle D (lowest list, [EST]); "
+    "D4 Silero lane manual only, not a CI job; D5 v1 signatures accepted by default in 0.2.0 "
+    "and marked deprecated. See docs/voice/OPEN_DECISIONS.md."
+)
+
+
+def _voice_extension(settings: Settings, *, write_docs: bool) -> int:
+    cohort = run_cohort(seed=settings.seed, n_calls=100, profile_name="balanced", echo_guard=True)
+    fault_settings = replace(settings, tool_deadline_ms=1500, jitter_ms=0)
+    fault_root = Path(settings.data_dir) / "faults"
+    faults = run_fault_cohort(fault_root, fault_settings)
+    docs_dir = Path("docs") / "voice"
+    reports_dir = Path("reports")
+    document = cohort_document(cohort)
+    if write_docs:
+        write_voice_reports(
+            cohort,
+            faults,
+            docs_dir=docs_dir,
+            reports_dir=reports_dir,
+            decisions_note=DECISIONS_NOTE,
+        )
+        example = trace_example(fault_root, fault_settings)
+        (docs_dir / "TRACE_W01.md").write_text(example, encoding="utf-8")
+    else:
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        payload = dict(document)
+        payload["version"] = __version__
+        (reports_dir / "latency_simulated.json").write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    taking = document["turn_taking"]
+    print(
+        "SIMULATED voice cohort "
+        f"calls={cohort.n_calls} turns={cohort.n_turns} "
+        f"gate={'pass' if cohort.passed else 'fail'} version={__version__}"
+    )
+    if isinstance(taking, dict):
+        print(
+            "turn-taking "
+            f"false_barge_in={taking['false_barge_in_rate']} "
+            f"missed_barge_in={taking['missed_barge_in_rate']} "
+            f"reaction_p95={taking['reaction_p95_ms']} "
+            f"endpoint_p95={taking['endpoint_p95_ms']} "
+            "(SIMULATED)"
+        )
+    for case in faults:
+        if not case.passed:
+            print(f"failure: webhook:{case.case_id}:{case.detail}")
+    for failure in cohort.failures:
+        print(f"failure: {failure}")
+    if cohort.passed and all(case.passed for case in faults):
+        return 0
+    return 1
+
+
 def cmd_eval(settings: Settings, profile: str) -> int:
     result, report = _run(settings, profile, "eval", regression=False)
     _print_report(report, result)
     _write_report(Path("reports") / "eval.json", report, result)
-    return 0 if report.passed else 1
+    if not report.passed:
+        return 1
+    if profile != "balanced":
+        return 0
+    return _voice_extension(settings, write_docs=False)
+
+
+def cmd_eval_voice(settings: Settings) -> int:
+    return _voice_extension(settings, write_docs=True)
 
 
 def cmd_regression(settings: Settings) -> int:
@@ -96,6 +169,27 @@ def cmd_regression(settings: Settings) -> int:
         return 0
     print("REGRESSION FAILED AS REQUIRED")
     return 1
+
+
+def cmd_turn_regression() -> int:
+    observed = echo_guard_off_rate()
+    print(f"echo-guard-off false_barge_in={observed:.3f} (SIMULATED)")
+    if observed > 0.05:
+        print("REGRESSION FAILED AS REQUIRED")
+        return 1
+    print("REGRESSION UNEXPECTEDLY PASSED")
+    return 0
+
+
+def cmd_webhook_regression(settings: Settings) -> int:
+    poisoned = replace(settings, retry_nonretryable=True, jitter_ms=0, tool_deadline_ms=1500)
+    case = w06_shows_retries(Path(settings.data_dir) / "regression-webhook", poisoned)
+    print(f"W06 attempts={case.attempts} error_class={case.error_class} (SIMULATED)")
+    if case.attempts > 1:
+        print("REGRESSION FAILED AS REQUIRED")
+        return 1
+    print("REGRESSION UNEXPECTEDLY PASSED")
+    return 0
 
 
 def cmd_latency_report(settings: Settings) -> int:
@@ -162,6 +256,48 @@ def cmd_dlq_replay(settings: Settings, dlq_path: Path, db_path: Path) -> int:
     return 0 if left == 0 else 1
 
 
+def cmd_live_dry_run() -> int:
+    raw = os.environ.get("MAX_LIVE_SPEND_USD", "").strip()
+    cap = float(raw) if raw else None
+    plan = dry_run_plan(cap)
+    print(
+        "live dry-run "
+        f"provenance={plan['provenance']} "
+        f"bundle={plan['bundle']} "
+        f"estimated_usd={plan['estimated_usd']} "
+        f"with_contingency={plan['estimated_usd_with_contingency']} "
+        f"over_cap={plan['over_cap']} request_sent={plan['request_sent']}"
+    )
+    print("No request was sent.")
+    return 2 if plan["over_cap"] else 0
+
+
+def cmd_synth_audio(settings: Settings, seed: int, calls: int, out: Path) -> int:
+    draws = draw_calls(seed, calls)
+    count = 0
+    for call in draws:
+        profile_silence = 416
+        for index, event in enumerate(call.events):
+            clip = render_turn(
+                seed=seed + index,
+                pause_ms=call.pause_ms,
+                noise_kind=call.noise_kind,
+                agent_event=event,
+                trailing_silence_ms=profile_silence,
+            )
+            write_clip(out / f"{call.call_id}-t{index + 1:02d}", clip)
+            count += 1
+    print(f"synth-audio wrote {count} clips to {out} (SIMULATED, seed={seed})")
+    del settings
+    return 0
+
+
+def cmd_trace(turn_id: str, log_path: Path, trace_path: Path | None) -> int:
+    text = format_turn(turn_id, log_path, trace_path)
+    print(text, end="")
+    return 1 if text.startswith("no events") else 0
+
+
 def cmd_live(settings: Settings) -> int:
     try:
         payload = run_live(os.environ, Path(settings.data_dir) / "live")
@@ -220,7 +356,24 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
     eval_parser = sub.add_parser("eval", help="run the invariant gate on the balanced profile")
     eval_parser.add_argument("--profile", default="balanced", choices=sorted(PROFILES))
-    sub.add_parser("eval-regression", help="must fail: clinical guard off and a bad cassette")
+    regression = sub.add_parser(
+        "eval-regression",
+        help="must fail: clinical guard off, or --turn-taking / --webhook",
+    )
+    regression.add_argument(
+        "--turn-taking",
+        action="store_true",
+        help="echo guard off; false barge-in must exceed the gate",
+    )
+    regression.add_argument(
+        "--webhook",
+        action="store_true",
+        help="treat poison 4xx as retryable; W06 must show retries",
+    )
+    sub.add_parser(
+        "eval-voice",
+        help="SIMULATED 100-call cohort, webhook faults, docs/voice report",
+    )
     sub.add_parser(
         "latency-report", help="print simulated latency and barge-in rates for 3 profiles"
     )
@@ -230,10 +383,23 @@ def build_parser() -> argparse.ArgumentParser:
     replay.add_argument("--db", required=True)
     scan = sub.add_parser("secretscan", help="scan a tree for committed secrets")
     scan.add_argument("path", nargs="?", default=".")
-    sub.add_parser(
+    live_parser = sub.add_parser(
         "live",
         help="optional real-provider measurement; off unless LIVE_MODE=1; not for CI",
     )
+    live_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print the [EST] cost and exit 2 above the cap; no request",
+    )
+    synth = sub.add_parser("synth-audio", help="write seeded DSP clips and sidecars")
+    synth.add_argument("--seed", type=int, default=42)
+    synth.add_argument("--calls", type=int, default=1)
+    synth.add_argument("--out", default="")
+    trace = sub.add_parser("trace", help="print the joined timeline for one turn")
+    trace.add_argument("--turn", required=True)
+    trace.add_argument("--log", required=True)
+    trace.add_argument("--trace-file", default="")
     serve_parser = sub.add_parser("webhook-serve", help="serve the tool webhook on localhost")
     serve_parser.add_argument("--host", default="127.0.0.1")
     serve_parser.add_argument("--port", type=int, default=8765)
@@ -248,7 +414,15 @@ def main(argv: list[str] | None = None) -> int:
     command = str(args.command)
     if command == "eval":
         return cmd_eval(settings, str(args.profile))
+    if command == "eval-voice":
+        return cmd_eval_voice(settings)
     if command == "eval-regression":
+        if bool(args.turn_taking) and bool(args.webhook):
+            parser.error("pass only one of --turn-taking and --webhook")
+        if bool(args.turn_taking):
+            return cmd_turn_regression()
+        if bool(args.webhook):
+            return cmd_webhook_regression(settings)
         return cmd_regression(settings)
     if command == "latency-report":
         return cmd_latency_report(settings)
@@ -259,7 +433,19 @@ def main(argv: list[str] | None = None) -> int:
     if command == "secretscan":
         return cmd_secretscan(Path(str(args.path)))
     if command == "live":
+        if bool(args.dry_run):
+            return cmd_live_dry_run()
         return cmd_live(settings)
+    if command == "synth-audio":
+        out = Path(str(args.out)) if str(args.out) else Path(settings.data_dir) / "synth"
+        return cmd_synth_audio(settings, int(args.seed), int(args.calls), out)
+    if command == "trace":
+        trace_file = str(args.trace_file)
+        return cmd_trace(
+            str(args.turn),
+            Path(str(args.log)),
+            Path(trace_file) if trace_file else None,
+        )
     if command == "webhook-serve":
         data = Path(settings.data_dir) / "serve"
         store = BookingStore(data / "clinic.sqlite")

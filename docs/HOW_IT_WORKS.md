@@ -55,11 +55,25 @@ Si el lápiz ni siquiera tocó el papel (timeout antes de escribir) y los reinte
 | DLQ | Cola de lo que no se pudo confirmar después de los reintentos. |
 | Invariante | Una regla de efecto ("no hay dos reservas", "no hay consejo clínico"), no la lista exacta de tool calls. |
 
+## Extensión de voz (0.2.0), todavía en el laboratorio
+
+A partir de 0.2.0 hay un segundo camino, al lado del guion de 49 llamadas. No reemplaza esos números (p50 896 ms y p95 1004.5 ms siguen siendo el reloj simulado del paquete 0.1.9).
+
+1. Un generador arma audio de juguete: una suma de armónicos, no una persona. Cada clip trae un sidecar con el inicio y el fin de la habla, en muestras exactas.
+2. El VAD de energía mira ventanas de 32 ms. Una máquina de estados decide si la persona sigue, si ya cerró el turno, o si interrumpió. Si interrumpe, se corta el TTS y el texto que queda en el historial es solo el que llegó a "sonar".
+3. El eco del agente es una heurística de correlación. No es cancelación de eco de verdad.
+4. Un informe de unas 100 llamadas sintéticas escribe p50 y p95 por etapa. Cada fila dice **SIMULATED**. El p95 trae un intervalo bootstrap. No se resta de la tabla medida del README.
+5. El webhook suma una firma con marca de tiempo (v2), clasifica qué errores se reintentan, y deja en la cola de cartas muertas el caso que no tiene arreglo reintentando. El manual de eso está en `docs/RUNBOOK.md`.
+
+Silero (una red de VAD) está como marca opcional, apagada, sin descarga de modelo. Las decisiones D1 a D5 siguen abiertas: `docs/voice/OPEN_DECISIONS.md`.
+
+El comando que regenera el informe es `python -m voice_cascade eval-voice`. El costo de ese comando es cero. No llama a un proveedor.
+
 ## Límites honestos
 
 - No mide proveedores en CI. La tabla "Measured with real providers" del README tiene una corrida pegada a mano (n=20, un proveedor, una corrida, no es un SLA). El título del archivo tiene que ser exactamente ese. Si STT o TTS son un stub local, el archivo se llama "Partially measured" y no entra en esa tabla. Si falta configuración, o si la estimación pasa `MAX_LIVE_SPEND_USD`, el proceso sale con código 2 y no manda ningún request. `unsupported_availability_claim` es un heurístico: marca una hora, una fecha ("el 20 de octubre", "el 22", `20/10`), una confirmación ("agendé", "confirmado") o un turno en inglés ("Tuesday at 10am"), y solo si ese turno no llamó una herramienta de agenda. No marca una negación ("no puedo", "I can't") ni el horario de atención ("de lunes a viernes"). Puede fallar en los dos sentidos y no reemplaza una lectura humana. `cost.estimated_usd` es tokens por el precio del entorno. `provider_reported_usd` aparece solo si `usage.cost_in_usd_ticks` es un entero (1 tick = 1e-10 USD).
 - El "LLM" no elige el id del turno leyendo la frase. Lo pone el guion.
-- El VAD es un umbral de energía sobre frames sintéticos, no una red neuronal.
+- El VAD del guion de 49 llamadas es un umbral de energía sobre frames con texto. El camino nuevo (0.2.0) usa el mismo tipo de umbral sobre PCM sintético. No es una red neuronal. Silero queda apagado.
 - No hay WebRTC, ni SIP, ni consentimiento de grabación, ni varios idiomas.
 - Los nombres y teléfonos son inventados y además se redactan en los logs. Redactar ficción no es cumplir una ley de datos personales.
 - La regresión `make eval-regression` **tiene que fallar**. Si pasa, la compuerta está rota.
