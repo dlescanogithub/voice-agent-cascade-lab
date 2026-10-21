@@ -25,7 +25,11 @@ sequenceDiagram
 | Module | Role |
 | --- | --- |
 | `audio.py` | Frames and an optional WAV reader. |
-| `vad.py` | aggressive / balanced / patient. |
+| `vad.py` | aggressive / balanced / patient on timed tokens (the 49-script gate). |
+| `pcm.py`, `synth_audio.py` | 16 kHz windows and the DSP generator. Sidecars are ground truth. |
+| `vad_backend.py`, `turn_machine.py` | `speech_prob` plus the shared state machine. Energy is the CI backend. Silero is an off-by-default marker. |
+| `voice_cohort.py`, `voice_report.py` | 100-call SIMULATED report. Not mixed with MEASURED rows. |
+| `fault_cohort.py` | Webhook cases W01–W12. |
 | `stt.py` | Partials, final, seeded word errors. |
 | `llm.py` | Intent fold, cassette, clinical guard. |
 | `tts.py` | Chunks, TTFB, cancel. |

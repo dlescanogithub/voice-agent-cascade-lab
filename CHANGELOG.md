@@ -2,7 +2,11 @@
 
 ## [Unreleased]
 
-- Docs: design for VAD/barge-in, per-stage latency and webhook failure runbook (no code yet).
+- Package 0.2.0. Offline voice extension: energy VAD on synthetic PCM, turn-taking state machine, barge-in cancel, SIMULATED 100-call latency report (p50/p95 labelled SIMULATED, with a seeded bootstrap interval), webhook v2 (signed timestamp, retry classes, full jitter, tool deadline, W01–W12), correlation logs, and `trace`.
+- `python -m voice_cascade eval-voice` writes `docs/voice/SIMULATED_LATENCY.md`. `live --dry-run` prints an [EST] cost and sends no request. Silero is an optional marker, off by default, and does not download weights.
+- Decisions D1–D5 stay open. The offline defaults are recorded in `docs/voice/OPEN_DECISIONS.md` (L1, DSP audio, bundle D, manual Silero, v1 signatures accepted and deprecated).
+- The 49-script SIMULATED figures are unchanged: p50 896 ms and p95 1004.5 ms, from package 0.1.9. They are not compared with the new cohort.
+- Design note for VAD/barge-in, per-stage latency and webhook failures (the note itself is design; the offline code is the 0.2.0 bullets above).
 - README opens with a three-line TL;DR under the title and badges.
 - Docs only. The SIMULATED eval figures stay p50 896 ms and p95 1004.5 ms. The cited package version is 0.1.9 and the cited git revision is `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main.
 - One measured xAI run (2026-10-17/18, repo HEAD `84cfb1a`, n=20, not an SLA) is in the README table "Measured with real providers", with evidence in `docs/live/` and notes in `docs/LIVE_RUN.md`. The scratch adapter is not in the repo. A short English demo and captions are in `docs/demo/`.

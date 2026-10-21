@@ -25,7 +25,21 @@ class JsonFormatter(logging.Formatter):
         if isinstance(fields, Mapping):
             redacted = redact_obj(dict(fields))
             if isinstance(redacted, dict):
-                payload["fields"] = {str(key): value for key, value in redacted.items()}
+                clean = {str(key): value for key, value in redacted.items()}
+                payload["fields"] = clean
+                for key in (
+                    "call_id",
+                    "turn_id",
+                    "span_id",
+                    "provenance",
+                    "tool",
+                    "attempt",
+                    "error_class",
+                    "idempotency_key_hash",
+                ):
+                    if key in clean:
+                        payload[key] = clean[key]
+        payload["ts"] = payload["timestamp"]
         return json.dumps(payload, ensure_ascii=False)
 
 

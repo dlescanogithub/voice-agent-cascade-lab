@@ -47,6 +47,20 @@ Until `stt_price`, `token_price`, and `tts_price` come from an official page wit
 - A retry must not create a second active booking. That is an invariant, not a hope.
 - Containment counts only calls that finish as booked, slots offered, or cancelled. Escalations are not contained.
 
+## Extension terms [EST]
+
+The 0.2.0 lab makes two extra terms explicit. They are still placeholders. The SIMULATED false-barge-in rate in `docs/voice/SIMULATED_LATENCY.md` is not a measured rate on real callers, and it is not an improvement over the 49-script false-cut rate.
+
+```
+monthly_value [EST] =
+    contained_calls × minutes_saved_per_call × loaded_rate_per_minute
+  − calls × (voice_stack_cost_per_call)
+  − false_barge_in_rate × calls × recovery_minutes × loaded_rate_per_minute
+  − dead_letter_rate × calls × manual_fix_minutes × loaded_rate_per_minute
+```
+
+`voice_stack_cost_per_call` stays empty until a list price has a source URL and a date. A planning range for one future paid run, not spent here, is in `docs/design/COST_ESTIMATE.md`. The dry-run command prints bundle D at size L1 and sends no request. Which bundle to buy (D3) and how many turns to measure (D1) stay open.
+
 ## What this does not claim
 
 No baseline handle time was collected. No currency is a quote. No clinic signed this pilot. The paragraph in the README under "Deployment Strategist conversation" is the order of work: discovery, shadow, then a gated write.

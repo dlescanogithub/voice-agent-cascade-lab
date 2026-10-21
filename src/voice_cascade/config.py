@@ -35,6 +35,13 @@ def _as_bool_flag(env: Mapping[str, str], name: str) -> bool:
     return env.get(name, "0") == "1"
 
 
+def _as_bool_default(env: Mapping[str, str], name: str, default: bool) -> bool:
+    raw = env.get(name)
+    if raw is None or raw == "":
+        return default
+    return raw == "1"
+
+
 def _as_float(env: Mapping[str, str], name: str, default: float) -> float:
     raw = env.get(name)
     if raw is None or raw == "":
@@ -52,6 +59,11 @@ class Settings:
     backoff_cap_ms: int = 500
     jitter_ms: int = 20
     timeout_ms: int = 300
+    tool_deadline_ms: int = 0
+    accept_v1_signature: bool = True
+    hmac_previous_secret: str = ""
+    signature_tolerance_s: int = 300
+    retry_nonretryable: bool = False
     log_level: str = "INFO"
     disable_clinical_guard: bool = False
     enable_real_stt: bool = False
@@ -88,6 +100,11 @@ class Settings:
             backoff_cap_ms=_as_int(source, "VOICE_CASCADE_BACKOFF_CAP_MS", 500),
             jitter_ms=_as_int(source, "VOICE_CASCADE_JITTER_MS", 20),
             timeout_ms=_as_int(source, "VOICE_CASCADE_TIMEOUT_MS", 300),
+            tool_deadline_ms=_as_int(source, "VOICE_CASCADE_TOOL_DEADLINE_MS", 0),
+            accept_v1_signature=_as_bool_default(source, "VOICE_CASCADE_ACCEPT_V1_SIGNATURE", True),
+            hmac_previous_secret=source.get("VOICE_CASCADE_HMAC_PREVIOUS_SECRET", ""),
+            signature_tolerance_s=_as_int(source, "VOICE_CASCADE_SIGNATURE_TOLERANCE_S", 300),
+            retry_nonretryable=_as_bool_flag(source, "VOICE_CASCADE_RETRY_NONRETRYABLE"),
             log_level=source.get("VOICE_CASCADE_LOG_LEVEL", "INFO"),
             disable_clinical_guard=_as_bool_flag(source, "VOICE_CASCADE_DISABLE_CLINICAL_GUARD"),
             enable_real_stt=_as_bool_flag(source, "VOICE_CASCADE_ENABLE_REAL_STT"),
