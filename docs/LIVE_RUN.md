@@ -36,7 +36,7 @@ Caller audio was synthesized with TTS, in Spanish. It was not a human voice.
 
 ## Numbers from the files
 
-Percentiles below are the `latency` object in `2026-10-17-results.json`. The repo rounds each sample to an integer millisecond, then takes the inclusive linear percentile (NumPy type 7). Recomputing that way from `turns[]` matches the stored figures.
+Percentiles below are the `latency` object in `2026-10-17-results.json`. The repo rounds each sample to an integer millisecond, then takes the inclusive linear percentile (NumPy type 7). Recomputing that way from `turns[]` matches the stored figures. The table rounds each stored p95 to 0.1 ms. The stored `p95_ms` values are STT 281.45000000000005, LLM 1145.3000000000002, TTS full audio 1253.6000000000004, and end-to-end 2587.7000000000007. TTS first-byte p50/p95 are not keys in `latency`. The same integer-millisecond percentile on `turns[].tts.ttfb_ms` is p50 302 and p95 380.05.
 
 | Stage | n | p50 ms | p95 ms |
 | --- | ---: | ---: | ---: |
@@ -50,7 +50,9 @@ Every STT, LLM, and TTS `status` in the 20 turns is 200. The adapter log has the
 
 LLM money is `cost.cost_in_usd_ticks` = 36684000. At 1 tick = 1e-10 USD that is US$0.0036684 (`provider_reported_usd` and `estimated_usd` are the same number in this file). About US$0.003668 is that figure rounded. The speech API does not report a dollar amount. STT+TTS is a list-price estimate: 49.296 audio seconds times US$0.10 per hour, plus 3742 characters times US$15 per 1M characters, which is US$0.05749933, about US$0.0575. Adding the tick total gives about US$0.0612 (exact sum US$0.06116773).
 
-`invariants.passed` is false. The only failure is `unsupported_availability_claim:S15`. The live command returns exit code 1 when that flag is false. The assistant sentence itself is not stored in the results file.
+`invariants.passed` is false. The only failure is `unsupported_availability_claim:S15`. The live command returns exit code 1 when that flag is false. The assistant sentence itself is not stored in the results file. The results file does not store the process exit code.
+
+The stored end-to-end p95 (2587.7000000000007 ms, n=20) is above the lab budget of 2500 ms (`StageBudget.e2e_ms`). The TTS first-byte p95 (380.05 ms) is above the lab TTS TTFB budget of 250 ms. Live mode does not read `StageBudget`, so this run did not fail on those budgets. The exit 1 is the heuristic. Live end-to-end is full STT+LLM+TTS audio. The lab end-to-end budget stops at the first TTS byte. The 380.05 ms figure is first-byte time, which is the quantity the 250 ms budget names. The full-audio TTS p95 in the table is a different number.
 
 ## Rehearsal
 
