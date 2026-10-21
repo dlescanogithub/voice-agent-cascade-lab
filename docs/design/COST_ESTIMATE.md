@@ -1,6 +1,6 @@
 # Cost estimate: one live run of ~100 synthetic calls
 
-**Status:** Draft v1, private. All money figures are **[EST]**. No API was called and nothing was spent to produce this file.
+**Status:** Draft v1. All money figures are **[EST]**. No API was called and nothing was spent to produce this file. The note lives in this public repository.
 **Prices checked:** 2026-10-19, from the official pages listed in §5. Prices change; re-check on the day of the run and update `LIVE_PRICE_DATE`.
 
 ## 1. Assumptions

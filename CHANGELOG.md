@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- Docs. README section "Business value" and `docs/BUSINESS_VALUE.md` (English value-realization plan). Business figures there are [SYN] unless marked [REPO] or [REPO-EST].
+- The 49-call SIMULATED percentiles stay the 0.1.9 publication (`4fb26ef`, 2026-10-17). They were not re-measured as a 0.2.0 result. `docs/voice/SIMULATED_LATENCY.md` now records the commit and Python version of the regeneration that matched those 0.2.0 tables (`bdd841a`, Python 3.12.3).
+- README live p95 cells are marked as rounded to 0.1 ms from `docs/live/2026-10-17-results.json`. The stored live end-to-end p95 is above the lab 2500 ms budget, and the live TTS first-byte p95 (380.05 ms) is above the 250 ms TTS TTFB budget. Live mode does not apply those budgets. Live end-to-end is full audio; the lab end-to-end budget stops at the first TTS byte. The live failure remains `unsupported_availability_claim:S15` (exit 1).
+- Next steps no longer asks to fill an empty measured table. That table already holds the `84cfb1a` run.
+- `docs/design/COST_ESTIMATE.md` status line is Draft v1. The file is in the public tree.
+- One local test run is recorded in the README (Python 3.12.3, 105 passed, 92.97% coverage).
+
 ## [0.2.0] - 2026-10-21
 
 - Package 0.2.0. Offline voice extension: energy VAD on synthetic PCM, turn-taking state machine, barge-in cancel, SIMULATED 100-call latency report (p50/p95 labelled SIMULATED, with a seeded bootstrap interval), webhook v2 (signed timestamp, retry classes, full jitter, tool deadline, W01–W12), correlation logs, and `trace`.
