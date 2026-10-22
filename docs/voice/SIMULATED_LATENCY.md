@@ -5,10 +5,10 @@ It was produced by the seeded clock and by synthetic PCM inside this repo.
 It is not a measurement of a speech, language, or synthesis provider.
 It is not evidence that a live deployment would be faster, safer, or cheaper.
 
-Package version `0.2.0`. Profile `balanced`. Seed `42`.
+Package version `0.2.1`. Profile `balanced`. Seed `42`.
 Calls `100`. Turns `400`.
-Git commit `bdd841a88dd516407913493efa9b07fc4eaa0ea6`. Python 3.12.3.
-`python -m voice_cascade eval-voice` on that commit and Python reproduced the tables below before those two facts were written here. The command does not write the commit or the Python version. A later run replaces this file and drops them unless they are put back.
+Git commit `bdd841a88dd516407913493efa9b07fc4eaa0ea6` (package 0.2.0). Python 3.12.3.
+`python -m voice_cascade eval-voice` on that commit and Python reproduced the tables below before those two facts were written here. The tables were not regenerated for 0.2.1. The command does not write the commit or the Python version. A later run replaces this file and drops them unless they are put back.
 Percentiles: inclusive linear (NumPy type 7).
 p95 bootstrap: 2,000 resamples, seeded. The interval is part of the SIMULATED result.
 Cold-start rows are the first turn of each call. That rule is fixed before the run.

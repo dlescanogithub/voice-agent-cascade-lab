@@ -1,7 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## Unreleased
 
+## 0.2.1 - 2026-10-22
+
+- Package 0.2.1. Docs only. No new MEASURED run and no new SIMULATED cohort. The SIMULATED report package line and `docs/voice/latency_simulated.json` `version` match 0.2.1. The tables stay the `bdd841a` regeneration (package 0.2.0).
 - Docs. README section "Business value" and `docs/BUSINESS_VALUE.md` (English value-realization plan). Business figures there are [SYN] unless marked [REPO] or [REPO-EST].
 - The 49-call SIMULATED percentiles stay the 0.1.9 publication (`4fb26ef`, 2026-10-17). They were not re-measured as a 0.2.0 result. `docs/voice/SIMULATED_LATENCY.md` now records the commit and Python version of the regeneration that matched those 0.2.0 tables (`bdd841a`, Python 3.12.3).
 - README live p95 cells are marked as rounded to 0.1 ms from `docs/live/2026-10-17-results.json`. The stored live end-to-end p95 is above the lab 2500 ms budget, and the live TTS first-byte p95 (380.05 ms) is above the 250 ms TTS TTFB budget. Live mode does not apply those budgets. Live end-to-end is full audio; the lab end-to-end budget stops at the first TTS byte. The live failure remains `unsupported_availability_claim:S15` (exit 1).

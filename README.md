@@ -22,7 +22,7 @@ A voice cascade hides time in five places: waiting to decide the caller has stop
 
 On the fictional **Clínica Aurora** (scheduling only, never clinical advice) the harness runs 49 scripted calls. The operating point is the **balanced** VAD profile. The latency cohort is 36 of those calls.
 
-**SIMULATED placeholder, 2026-10-17**, package version **0.1.9**, command `python -m voice_cascade eval` (balanced profile). git revision: `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. The same command on that revision prints these percentiles. These 49-call figures were **not re-measured as a published 0.2.0 result**, and the 0.1.9 record does not name a Python version. On this tree the command prints `version=0.2.0` because that is the package version. A local run on `bdd841a` with Python 3.12.3 printed the same percentiles. That run confirms the clock still emits the 0.1.9 figures. It is not a new measurement.
+**SIMULATED placeholder, 2026-10-17**, package version **0.1.9**, command `python -m voice_cascade eval` (balanced profile). git revision: `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. The same command on that revision prints these percentiles. These 49-call figures were **not re-measured as a published 0.2.0 result**, and the 0.1.9 record does not name a Python version. On this tree the command prints `version=0.2.1` because that is the package version. A local run on `bdd841a` with Python 3.12.3 printed the same percentiles. That run confirms the clock still emits the 0.1.9 figures. It is not a new measurement.
 
 The harness computes and gates a latency budget. **p95 end-to-end: 1004.5 ms (SIMULATED)** against a budget of 2500 ms. **p50 end-to-end: 896 ms (SIMULATED)**. These two percentiles differ because each stage is a seeded draw, not a constant. They are SIMULATED placeholders. The measured table later in this file is a different run and is not a comparison. The same command exits 0 only when the invariant gate passes: task completed or escalated, no double booking, no clinical advice, PII redacted, latency budget held, eligible barge-ins cancelled.
 
@@ -331,7 +331,7 @@ python3 -m voice_cascade eval-regression
 
 CI runs that command and fails the job if the exit code is 0. The regression turns the clinical guard off and injects the advice sentence stored under `regression_clinical` in the cassette. A green regression means the gate can no longer see clinical advice.
 
-Local `python3 -m pytest` on Python 3.12.3, package 0.2.0, with the addopts in `pyproject.toml` (`--cov=voice_cascade`, fail-under 80): **105 passed**, total coverage **92.97%**. The suite is unchanged from `bdd841a`. It is not a CI badge.
+Local `python3 -m pytest` on Python 3.12.3, package 0.2.1, with the addopts in `pyproject.toml` (`--cov=voice_cascade`, fail-under 80): **105 passed**, total coverage **92.97%**. The suite is unchanged from `bdd841a`. It is not a CI badge.
 
 Latency comparison (SIMULATED):
 
