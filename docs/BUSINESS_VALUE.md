@@ -17,7 +17,7 @@
 
 **Offline cascade** STT → LLM → TTS with fake providers and a simulated clock, for one intent family: book, list, or cancel a slot. It does not give clinical advice. It does not place phone calls, it does not use a microphone, and it does not call providers in `eval`, `demo`, or CI.
 
-**SIMULATED figures for the 49-call script** (latency cohort n=36, VAD profile *balanced*, seed 42). The repo publishes them as package **0.1.9**, revision `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa`, 2026-10-17, command `python -m voice_cascade eval`. They are placeholders with lognormal parameters **[REPO-EST]**. They were **not re-measured as a published 0.2.0 result**. The 0.1.9 publication does not record a Python version. On this tree the same command prints `version=0.2.0` because that is the package version. A local run of that command on `bdd841a` with Python 3.12.3 printed the same percentiles. That run confirms the clock still emits the 0.1.9 figures. It is not a new measurement, and it does not move the attribution off `4fb26ef`.
+**SIMULATED figures for the 49-call script** (latency cohort n=36, VAD profile *balanced*, seed 42). The repo publishes them as package **0.1.9**, revision `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa`, 2026-10-17, command `python -m voice_cascade eval`. They are placeholders with lognormal parameters **[REPO-EST]**. They were **not re-measured as a published 0.2.0 result**. The 0.1.9 publication does not record a Python version. On this tree the same command prints `version=0.2.1` because that is the package version. A local run of that command on `bdd841a` with Python 3.12.3 printed the same percentiles. That run confirms the clock still emits the 0.1.9 figures. It is not a new measurement, and it does not move the attribution off `4fb26ef`.
 
 | Stage | p50 SIMULATED ms | p95 SIMULATED ms | Budget p95 ms |
 | --- | ---: | ---: | ---: |
@@ -59,7 +59,7 @@
 - R04: timeout before commit: escalated, one dead letter, no booking.
 - R05: slow response after commit: the retry returns the same booking.
 
-**Voice extension 0.2.0, SIMULATED** ([docs/voice/SIMULATED_LATENCY.md](voice/SIMULATED_LATENCY.md): package `0.2.0`, seed 42, 100 calls, 400 turns, p95 bootstrap with 2,000 resamples). Regenerated with `python -m voice_cascade eval-voice` on commit `bdd841a88dd516407913493efa9b07fc4eaa0ea6` and Python 3.12.3. That command reproduced the tables already in the file. The commit and the Python version are recorded in the file by this docs change. `eval-voice` itself does not write them.
+**Voice extension 0.2.0, SIMULATED** ([docs/voice/SIMULATED_LATENCY.md](voice/SIMULATED_LATENCY.md): package line `0.2.1`, seed 42, 100 calls, 400 turns, p95 bootstrap with 2,000 resamples). Regenerated with `python -m voice_cascade eval-voice` on commit `bdd841a88dd516407913493efa9b07fc4eaa0ea6` (package 0.2.0) and Python 3.12.3. That command reproduced the tables already in the file. The tables were not regenerated for 0.2.1. The commit and the Python version are recorded in the file by this docs change. `eval-voice` itself does not write them.
 
 The current SIMULATED cohort is this 100-call script, not the 49-call table above:
 
@@ -217,9 +217,9 @@ That split is the ownership table in [RUNBOOK.md](RUNBOOK.md) [REPO]. The sponso
 These were open questions about the README at that commit. This docs change records the result of each check.
 
 1. **Next steps item 1** asked to paste wall-clock rows into an empty table. The "Measured with real providers" table already holds the `84cfb1a` run. The item now says so.
-2. **49-call figures stay attributed to 0.1.9 / `4fb26ef`.** They were not re-published as a 0.2.0 measurement. `eval` on this tree prints `version=0.2.0` and, on Python 3.12.3, the same percentiles. That local print is a confirmation, not a new published campaign. The current SIMULATED cohort is the 100-call report (end-to-end p95 927.150 ms).
+2. **49-call figures stay attributed to 0.1.9 / `4fb26ef`.** They were not re-published as a 0.2.0 measurement. `eval` on `bdd841a` prints `version=0.2.0` and, on Python 3.12.3, the same percentiles. This tree prints `version=0.2.1`. That local print is a confirmation, not a new published campaign. The current SIMULATED cohort is the 100-call report (end-to-end p95 927.150 ms).
 3. **Python version for the 0.2.0 SIMULATED report.** [voice/SIMULATED_LATENCY.md](voice/SIMULATED_LATENCY.md) now records commit `bdd841a88dd516407913493efa9b07fc4eaa0ea6` and Python 3.12.3. Regeneration matched the existing tables. The 0.1.9 publication still has no Python version.
 4. **README live p95 rounding is real.** Stored `p95_ms` values are 281.45000000000005, 1145.3000000000002, 1253.6000000000004, and 2587.7000000000007. The README shows 281.5, 1145.3, 1253.6, and 2587.7, and now says those cells are rounded to 0.1 ms.
 5. **`docs/design/COST_ESTIMATE.md`** no longer says "private". The status line is "Draft v1".
-6. **Tests.** Local `python3 -m pytest` with the repo addopts, Python 3.12.3, package 0.2.0: 105 passed, total coverage 92.97%. The suite is unchanged from `bdd841a`. The same command is recorded in the README.
+6. **Tests.** Local `python3 -m pytest` with the repo addopts, Python 3.12.3, package 0.2.1: 105 passed, total coverage 92.97%. The suite is unchanged from `bdd841a`. The same command is recorded in the README.
 7. **Budget comparison, confirmed from the artifacts.** Live end-to-end p95 2587.7000000000007 ms (`84cfb1a`, n=20) is above the lab 2500 ms budget. Live TTS first-byte p95 380.05 ms is above the 250 ms TTS TTFB budget. Live end-to-end is full audio; the lab end-to-end budget is first byte. The live run's published failure is `unsupported_availability_claim:S15`, and the live command returns 1 when `invariants.passed` is false. Live mode does not gate on `StageBudget`.

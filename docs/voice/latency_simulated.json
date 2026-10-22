@@ -207,7 +207,7 @@
     "reaction_p95_ms": 192.0,
     "true_barge_n": 112
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "webhook_cases": [
     {
       "attempts": 3,

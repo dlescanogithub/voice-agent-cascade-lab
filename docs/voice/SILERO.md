@@ -2,7 +2,7 @@
 
 The energy backend is what `eval` and CI run. It has no extra dependency.
 
-`voice-agent-cascade-lab[vad]` is declared and **empty** in 0.2.0. Installing the base package does not install torch and does not download weights. `load_silero` raises before any import of a model:
+`voice-agent-cascade-lab[vad]` is declared and **empty** in 0.2.1. Installing the base package does not install torch and does not download weights. `load_silero` raises before any import of a model:
 
 - Flag unset or not `1`: "off by default".
 - Flag `VOICE_CASCADE_ENABLE_SILERO=1`: still refuses, and still does not download weights.
