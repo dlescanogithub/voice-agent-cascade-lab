@@ -44,7 +44,7 @@ def test_cli_dlq_replay_and_serve(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     monkeypatch.setenv("VOICE_CASCADE_DATA_DIR", str(tmp_path / "data"))
     settings = Settings.from_env()
     store = BookingStore(tmp_path / "clinic.sqlite")
-    store.ensure_slot("slot-z", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-z", "2026-11-03", "general_consult")
     dlq_path = tmp_path / "dlq.jsonl"
     client = WebhookClient(
         InProcessTransport(WebhookApp(store, settings.hmac_secret)),

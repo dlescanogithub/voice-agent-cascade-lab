@@ -9,16 +9,15 @@ from dataclasses import dataclass
 from voice_cascade.budget import STT_FINAL_MS, STT_PARTIAL_MS
 
 SUBSTITUTIONS = {
-    "agendar": "ajendar",
-    "turno": "torno",
-    "cancelar": "canselar",
-    "horarios": "orarios",
-    "disponibles": "disponibles",
-    "consulta": "consuta",
-    "quiero": "kiero",
-    "fiebre": "fievre",
-    "medicamento": "medicamente",
-    "duele": "duele",
+    "book": "bok",
+    "appointment": "apointment",
+    "cancel": "cansel",
+    "available": "availabe",
+    "consultation": "consultaton",
+    "want": "wnt",
+    "fever": "fevor",
+    "medicine": "medcine",
+    "hurts": "hurst",
 }
 
 

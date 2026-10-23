@@ -1,6 +1,6 @@
 # Scope
 
-Fictional pilot: Clínica Aurora scheduling. No fees, no statement of work, no vendor contract.
+Fictional pilot: Aurora Clinic scheduling. No fees, no statement of work, no vendor contract.
 
 ## Phases
 
@@ -13,8 +13,8 @@ Fictional pilot: Clínica Aurora scheduling. No fees, no statement of work, no v
 
 ## Assumptions
 
-- One language in the cassette (Spanish, scheduling phrases).
-- One service id: `consulta_general`. It is an administrative label, not a clinical protocol.
+- One language in the cassette (English, scheduling phrases).
+- One service id: `general_consult`. It is an administrative label, not a clinical protocol.
 - The system of record can store an idempotency key or sit behind an adapter that does.
 - Synthetic data only inside this repository.
 

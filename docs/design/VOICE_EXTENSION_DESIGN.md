@@ -104,7 +104,7 @@ Durations are multiples of 32 ms where possible so that window rounding does not
 Rules:
 
 1. **Echo guard.** While `Speaking`, a mic window whose energy envelope correlates with `agent_out` above `echo_corr` (**[EST]** 0.6, lag search 0–120 ms) is labelled echo and does not count toward `barge_min_ms`. This is a lab heuristic, not AEC, and the doc says so wherever it is reported.
-2. **Backchannel.** A mic speech run shorter than `barge_min_ms` that ends before the threshold ("sí", "ajá" in the synthetic script) does not cancel. It is logged as `backchannel_ignored`.
+2. **Backchannel.** A mic speech run shorter than `barge_min_ms` that ends before the threshold ("yeah", "uh-huh" in the synthetic script) does not cancel. It is logged as `backchannel_ignored`.
 3. **Cancellation is total.** `Cancelling` stops TTS, cancels the in-flight LLM stream, and cancels any not-yet-sent tool call. A tool call already sent is never cancelled from the voice side. The idempotency key covers its retry.
 4. **Played text only.** The assistant turn kept in history is truncated to the characters whose audio was played before the stop. Invariant `history_matches_playback`.
 5. **Thinking interruption.** Caller speech during `Thinking` discards the draft. No TTS for a discarded draft.
@@ -133,7 +133,7 @@ Two fixture tiers, because a neural VAD is trained on real speech and will not f
 | Tier | Content | Used for | Backend |
 | --- | --- | --- | --- |
 | DSP | Speech-like signal: harmonic stack (F0 100–220 Hz) with syllable-rate amplitude modulation (4–6 Hz) and formant-shaped noise. Noise beds: white, pink, babble (summed DSP voices). Impulses (clicks, a cough envelope). Echo = `agent_out` delayed 40–120 ms at −20 to −10 dB. | State machine, hysteresis, echo guard, metric math | `energy` (deterministic, CI) |
-| Voice | Short synthetic Spanish phrases from a TTS voice, generated once and cached. Mixed with the same noise beds at SNR 20 / 10 / 5 dB. | Silero behaviour, false barge-in under noise | `silero` (optional lane) |
+| Voice | Short synthetic English phrases from a TTS voice, generated once and cached. Mixed with the same noise beds at SNR 20 / 10 / 5 dB. | Silero behaviour, false barge-in under noise | `silero` (optional lane) |
 
 Corpus size **[EST]**: 100 calls × 4 turns. Each call draws one condition (SNR, noise type, internal pause 200–900 ms, echo level, backchannel yes/no, barge-in timing). The draw table is in the report so any rate can be traced back to its condition.
 
@@ -270,7 +270,7 @@ This section follows the structure used across the portfolio and extends the exi
 
 | Use case | Status | Problem | Who approves | Gated effects | How this repo handles it |
 | --- | --- | --- | --- | --- | --- |
-| Clínica Aurora scheduling (fictional) | Implemented, extended here | Callers talk over the agent, pause mid-sentence, call from noisy places. A tool retry must not double-book. | Clinic operations owns slots. A person takes clinical questions and failed tools. | `book_appointment`, `cancel_appointment` | State machine, VAD backends, fault cohort W01–W12, invariant gate |
+| Aurora Clinic scheduling (fictional) | Implemented, extended here | Callers talk over the agent, pause mid-sentence, call from noisy places. A tool retry must not double-book. | Clinic operations owns slots. A person takes clinical questions and failed tools. | `book_appointment`, `cancel_appointment` | State machine, VAD backends, fault cohort W01–W12, invariant gate |
 | Utility outage line (fictional) | Design only | High-noise calls during an outage. Callers interrupt long status messages. | Operations approves the status script and the escalation rule. | None. Read-only status. | Barge-in metrics under low SNR are the reusable piece. |
 | Field-service rescheduling (fictional) | Design only | A webhook to a dispatch system that is often slow. | Dispatch lead approves which slots the agent may offer. | Move a visit. | Retry classification, tool deadline and runbook are the reusable piece. |
 

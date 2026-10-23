@@ -1,6 +1,6 @@
 # Business case
 
-Fictional desk: Clínica Aurora, one intent family, appointments only. No clinical advice. Figures in money and volume are **[EST]**. Latency figures cited from the harness are **SIMULATED** placeholders (see the README for the command and the date). They are not a provider measurement. One measured run lives in the README section "Measured with real providers"; it is not used in this ROI sketch and it is not a comparison with these placeholders.
+Fictional desk: Aurora Clinic, one intent family, appointments only. No clinical advice. Figures in money and volume are **[EST]**. Latency figures cited from the harness are **SIMULATED** placeholders (see the README for the command and the date). They are not a provider measurement. One measured run lives in the README section "Measured with real providers"; it is not used in this ROI sketch and it is not a comparison with these placeholders.
 
 ## Pilot
 

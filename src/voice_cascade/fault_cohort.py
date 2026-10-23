@@ -136,7 +136,7 @@ def w06_shows_retries(root: Path, settings: Settings) -> FaultCase:
 
 def _w01(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
     client, store, _app = _client(tmp, settings, logger=logger)
-    store.ensure_slot("slot-w01", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-w01", "2026-11-03", "general_consult")
     result = client.invoke(
         _book("slot-w01", "pat-w01", "key-w01", "w01"),
         FaultPlan("book_appointment", "timeout_before_commit", 9),
@@ -163,7 +163,7 @@ def _w01(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
 
 def _w02(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
     client, store, _app = _client(tmp, settings, logger=logger)
-    store.ensure_slot("slot-w02", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-w02", "2026-11-03", "general_consult")
     result = client.invoke(
         _book("slot-w02", "pat-w02", "key-w02", "w02"),
         FaultPlan("book_appointment", "slow_after_commit", 1),
@@ -187,7 +187,7 @@ def _w02(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
 
 def _w03(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
     client, store, _app = _client(tmp, settings, logger=logger)
-    store.ensure_slot("slot-w03", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-w03", "2026-11-03", "general_consult")
     result = client.invoke(
         _book("slot-w03", "pat-w03", "key-w03", "w03"),
         FaultPlan("book_appointment", "http_503", 2),
@@ -204,7 +204,7 @@ def _w03(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
 
 def _w04(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
     client, store, _app = _client(tmp, settings, logger=logger)
-    store.ensure_slot("slot-w04", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-w04", "2026-11-03", "general_consult")
     before = client.clock.now_ms
     result = client.invoke(
         _book("slot-w04", "pat-w04", "key-w04", "w04"),
@@ -232,7 +232,7 @@ def _w04(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
 
 def _w05(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
     client, store, _app = _client(tmp, settings, logger=logger)
-    store.ensure_slot("slot-w05", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-w05", "2026-11-03", "general_consult")
     result = client.invoke(
         _book("slot-w05", "pat-w05", "key-w05", "w05"),
         FaultPlan("book_appointment", "http_500", 9),
@@ -260,7 +260,7 @@ def _w05(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
 
 def _w06(tmp: Path, settings: Settings, logger: logging.Logger | None) -> FaultCase:
     client, store, app = _client(tmp, settings, logger=logger)
-    store.ensure_slot("slot-w06", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-w06", "2026-11-03", "general_consult")
     before = app.store_accesses
     result = client.invoke(
         _book("slot-w06", "pat-w06", "key-w06", "w06"),
@@ -366,7 +366,7 @@ def _w09(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
 def _w10(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
     wrong = "rotation-lab-previous"
     client, store, _app = _client(tmp, settings, logger=logger)
-    store.ensure_slot("slot-w10", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-w10", "2026-11-03", "general_consult")
     denied = client.invoke(
         _book("slot-w10", "pat-w10", "key-w10", "w10"),
         turn_id="w10:t01",
@@ -374,7 +374,7 @@ def _w10(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
     )
     store.close()
     client_ok, store_ok, _app_ok = _client(tmp / "rotated", settings, previous=wrong, logger=logger)
-    store_ok.ensure_slot("slot-w10", "2026-11-03", "consulta_general")
+    store_ok.ensure_slot("slot-w10", "2026-11-03", "general_consult")
     allowed = client_ok.invoke(
         _book("slot-w10", "pat-w10", "key-w10b", "w10"),
         turn_id="w10:t01",
@@ -418,7 +418,7 @@ def _w11(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
 
 def _w12(tmp: Path, settings: Settings, logger: logging.Logger) -> FaultCase:
     client, store, _app = _client(tmp, settings, logger=logger)
-    store.ensure_slot("slot-w12", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-w12", "2026-11-03", "general_consult")
     envelope = _book("slot-w12", "pat-w12", "key-w12", "w12")
     first = client.invoke(envelope, turn_id="w12:t01")
     second = client.invoke(envelope, turn_id="w12:t01")

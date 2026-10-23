@@ -12,7 +12,7 @@ Ask these before choosing a model, a telephony vendor, or a VAD profile. Each an
    The lab escalates clinical questions, unclear speech, slot conflicts, and dead letters. A real desk has to name the queue, the hours, and the maximum time a caller waits after escalation. If nobody picks up, do not automate the front door.
 
 4. **What languages and accents are actually on the line?**
-   This repo injects word errors with a seed. That is not an accent study. If more than one language shows up, the single Spanish cassette is out of scope until there is a language branch and a per-language gate. Do not "turn on" a multilingual vendor and skip the eval.
+   This repo injects word errors with a seed. That is not an accent study. If more than one language shows up, the single English cassette is out of scope until there is a language branch and a per-language gate. Do not "turn on" a multilingual vendor and skip the eval.
 
 5. **What system owns the slots, and can it take an idempotency key?**
    If the system of record cannot replay a key, the lab's webhook pattern has to live in an adapter in front of it. If it cannot reject a second writer, do not connect the write tool.
