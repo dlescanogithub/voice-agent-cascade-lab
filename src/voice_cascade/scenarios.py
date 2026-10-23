@@ -1,4 +1,4 @@
-"""Scripted synthetic calls for Clínica Aurora. No real callers."""
+"""Scripted synthetic calls for Aurora Clinic. No real callers."""
 
 from __future__ import annotations
 
@@ -19,12 +19,14 @@ NAMES = (
     "Ona Chilca",
 )
 
+# The first two words must already carry the intent. The aggressive profile
+# endpoints on the internal pause and only hears that prefix.
 _BODIES: dict[str, str] = {
-    "book": "Quiero agendar un turno de consulta general",
-    "find": "Hay horarios disponibles para consulta general",
-    "cancel": "Necesito cancelar el turno reservado",
-    "clinical": "Me duele la cabeza y tengo fiebre que medicamento tomo",
-    "unclear": "Eh esto es una prueba de microfono",
+    "book": "I want a general consultation appointment",
+    "find": "Available times for a general consultation",
+    "cancel": "Cancel the reserved appointment please",
+    "clinical": "Head hurts and I have a fever what medicine should I take",
+    "unclear": "Uh this is a microphone test",
 }
 
 
@@ -33,7 +35,7 @@ def phone_for(index: int) -> str:
 
 
 def utterance_for(intent: str, name: str) -> str:
-    return f"{_BODIES[intent]} soy {name}"
+    return f"{_BODIES[intent]} this is {name}"
 
 
 @dataclass(frozen=True)

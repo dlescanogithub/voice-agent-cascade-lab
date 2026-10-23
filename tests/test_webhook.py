@@ -53,8 +53,8 @@ def _book(slot: str, patient: str, key: str) -> dict[str, object]:
 
 def test_hmac_idempotency_and_conflict(tmp_path: Path) -> None:
     client, store, clock = _client(tmp_path)
-    store.ensure_slot("slot-a", "2026-11-03", "consulta_general")
-    store.ensure_slot("slot-b", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-a", "2026-11-03", "general_consult")
+    store.ensure_slot("slot-b", "2026-11-03", "general_consult")
     first = client.invoke(_book("slot-a", "pat-1", "key-a"))
     replay = client.invoke(_book("slot-a", "pat-1", "key-a"))
     conflict = client.invoke(_book("slot-a", "pat-2", "key-b"))
@@ -69,7 +69,7 @@ def test_hmac_idempotency_and_conflict(tmp_path: Path) -> None:
 
 def test_idempotency_survives_reopen(tmp_path: Path) -> None:
     client, store, _clock = _client(tmp_path)
-    store.ensure_slot("slot-a", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-a", "2026-11-03", "general_consult")
     first = client.invoke(_book("slot-a", "pat-1", "key-a"))
     store.close()
     reopened = BookingStore(tmp_path / "clinic.sqlite")
@@ -82,7 +82,7 @@ def test_idempotency_survives_reopen(tmp_path: Path) -> None:
 
 def test_cancel_and_unknown_slot(tmp_path: Path) -> None:
     client, store, _clock = _client(tmp_path)
-    store.seed_booking("slot-c", "2026-11-03", "consulta_general", "pat-1", "bk-seed")
+    store.seed_booking("slot-c", "2026-11-03", "general_consult", "pat-1", "bk-seed")
     cancelled = client.invoke(
         {
             "tool": "cancel_appointment",
@@ -116,7 +116,7 @@ def test_cancel_and_unknown_slot(tmp_path: Path) -> None:
     found = client.invoke(
         {
             "tool": "find_slots",
-            "args": {"date": "2026-11-03", "service": "consulta_general"},
+            "args": {"date": "2026-11-03", "service": "general_consult"},
             "idempotency_key": "find-1",
             "call_id": "call-4",
         }
@@ -164,7 +164,7 @@ def test_retries_dlq_and_replay(tmp_path: Path) -> None:
         max_attempts=3, jitter_ms=0, timeout_ms=300, backoff_base_ms=40, backoff_cap_ms=500
     )
     client, store, clock = _client(tmp_path, settings)
-    store.ensure_slot("slot-a", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-a", "2026-11-03", "general_consult")
     fault = FaultPlan("book_appointment", "http_500", 2)
     result = client.invoke(_book("slot-a", "pat-1", "key-500"), fault)
     assert result["ok"] is True
@@ -175,7 +175,7 @@ def test_retries_dlq_and_replay(tmp_path: Path) -> None:
     store.close()
 
     client_b, store_b, clock_b = _client(tmp_path / "dlq", settings)
-    store_b.ensure_slot("slot-z", "2026-11-03", "consulta_general")
+    store_b.ensure_slot("slot-z", "2026-11-03", "general_consult")
     dropped = client_b.invoke(
         _book("slot-z", "pat-9", "key-drop"),
         FaultPlan("book_appointment", "timeout_before_commit", 9),
@@ -205,7 +205,7 @@ def test_retries_dlq_and_replay(tmp_path: Path) -> None:
 def test_slow_after_commit_is_idempotent(tmp_path: Path) -> None:
     settings = _settings(jitter_ms=20, timeout_ms=300)
     client, store, clock = _client(tmp_path, settings)
-    store.ensure_slot("slot-a", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-a", "2026-11-03", "general_consult")
     result = client.invoke(
         _book("slot-a", "pat-1", "key-slow"), FaultPlan("book_appointment", "slow_after_commit", 1)
     )
@@ -227,8 +227,8 @@ def test_backoff_cap() -> None:
 def test_out_of_order_release_does_not_double_book(tmp_path: Path) -> None:
     store = BookingStore(tmp_path / "clinic.sqlite")
     app = WebhookApp(store, "test-only-hmac-secret")
-    store.ensure_slot("slot-a", "2026-11-03", "consulta_general")
-    store.ensure_slot("slot-b", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-a", "2026-11-03", "general_consult")
+    store.ensure_slot("slot-b", "2026-11-03", "general_consult")
     buffer = ResponseBuffer()
     bodies = [
         canonical_json(_book("slot-a", "pat-1", "key-a")),
@@ -249,7 +249,7 @@ def test_out_of_order_release_does_not_double_book(tmp_path: Path) -> None:
 def test_transport_http_500_is_retried(tmp_path: Path) -> None:
     settings = _settings(jitter_ms=0)
     store = BookingStore(tmp_path / "clinic.sqlite")
-    store.ensure_slot("slot-a", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-a", "2026-11-03", "general_consult")
     clock = SimulatedClock()
 
     class Flaky(InProcessTransport):
@@ -312,7 +312,7 @@ def test_http_server_roundtrip(tmp_path: Path) -> None:
     import threading
 
     store = BookingStore(tmp_path / "clinic.sqlite")
-    store.ensure_slot("slot-a", "2026-11-03", "consulta_general")
+    store.ensure_slot("slot-a", "2026-11-03", "general_consult")
     app = WebhookApp(store, "test-only-hmac-secret")
     server = build_http_server(app, "127.0.0.1", 0)
     thread = threading.Thread(target=server.serve_forever, daemon=True)

@@ -1,79 +1,79 @@
-# Cómo funciona este laboratorio
+# How this lab works
 
-Este texto está para explicarlo en una entrevista, en voz alta. Los números de latencia son **simulados**. No hay un teléfono de verdad atrás.
+This is a walkthrough for engineers and buyers. The latency numbers are **simulated**. There is no real telephone behind them.
 
-## La analogía
+## The analogy
 
-Imaginá un restaurante que toma reservas solo por teléfono.
+Picture a restaurant that takes reservations only by phone.
 
-1. La persona del otro lado habla. El mozo espera un silencio para estar seguro de que la frase terminó. Si corta antes, anota un pedido a medias. Si espera de más, la mesa se impacienta. Eso es el **VAD** (detección de voz) y el cierre de turno.
-2. Recién ahí escribe lo que entendió. A veces cambia una palabra. Eso es el **STT**.
-3. Decide: reservar, decir qué mesas hay, cancelar, o pasar la llamada a una persona. No inventa un plato ni da un consejo de salud. Eso es el **LLM de cassette** más el guardia clínico.
-4. Anota la reserva en el libro. Si el lápiz se traba y prueba de nuevo, no puede escribir la misma mesa dos veces. Eso es el **webhook con idempotencia**.
-5. Empieza a repetir la confirmación en voz alta. Si el cliente lo interrumpe, el mozo se calla. Si se calla porque pasó un camión, cortó al pedo. Eso es el **barge-in** y el falso corte.
+1. The person on the other end talks. The host waits for a silence to be sure the sentence is finished. Cut too early and the order is half-written. Wait too long and the table gets impatient. That is the **VAD** (voice activity detection) and the turn end.
+2. Only then does the host write down what they heard. Sometimes a word changes. That is the **STT**.
+3. They decide: book a table, say which tables are free, cancel, or hand the call to a person. They do not invent a dish or give health advice. That is the **cassette LLM** plus the clinical guard.
+4. They write the reservation in the book. If the pencil sticks and they try again, they must not write the same table twice. That is the **webhook with idempotency**.
+5. They start reading the confirmation out loud. If the guest interrupts, the host stops. If they stop because a truck went by, they cut for nothing. That is **barge-in** and the false cut.
 
-El laboratorio mide esos cinco tiempos con un reloj de mentira. Cada espera sale de una lognormal con semilla (los parámetros están marcados [EST] en el código). No es la latencia de un proveedor pago. La compuerta mira el presupuesto; los números son un marcador de posición.
+The lab measures those five times with a fake clock. Each wait is a seeded lognormal draw (the parameters are marked [EST] in the code). It is not the latency of a paid provider. The gate watches the budget. The numbers are a placeholder.
 
-## La cascada, en una frase
+## The cascade, in one sentence
 
-Entra audio sintético (en realidad una lista de pedacitos con duración y texto). Sale una frase de confirmación, una derivación, o una reserva. En el medio hay cinco etapas. Mirá el diagrama del README: frames → VAD → STT → cassette → guardia → webhook → TTS, y al lado el corte si la persona habla de nuevo.
+Synthetic audio goes in (really a list of pieces with a duration and text). A confirmation, a handoff, or a booking comes out. Five stages sit in the middle. See the diagram in the README: frames → VAD → STT → cassette → guard → webhook → TTS, and beside that the cut if the person speaks again.
 
-No es un modelo de punta a punta que escucha y habla en un solo salto. Es a propósito una cascada, porque ahí se ve **dónde** se fue el tiempo.
+This is not an end-to-end model that listens and speaks in one jump. It is a cascade on purpose, because that is where you can see **where** the time went.
 
-## Paso a paso
+## Step by step
 
-1. El guion arma frames. Un frame es habla, silencio o ruido, con milisegundos y un texto. No hace falta un WAV para la lógica. Hay un WAV de silencio de 20 ms solo para mostrar que la interfaz de audio existe (`fixtures/silence_20ms.wav`).
-2. El VAD, con uno de tres perfiles, decide cuándo terminó el turno.
-   - **aggressive**: silencio corto (180 ms) y umbral bajo. Corta rápido. También se confunde con un ruido de 100 ms.
-   - **balanced**: 400 ms de silencio y un umbral que ignora ese ruido. Es el perfil que tiene que pasar la compuerta.
-   - **patient**: 800 ms. Espera más. No se apura con una pausa de 300 ms.
-3. El STT falso devuelve parciales (una palabra más por vez) y un final. Si el guion pide error, cambia palabras con una semilla fija. Eso simula acento o un ASR flojo. No es un corpus de acentos reales.
-4. El clasificador dobla el texto (minúsculas, sin acentos) y elige: clínico, cancelar, reservar, horarios, o no entendido. La cassette dice qué herramienta llamar y qué frase decir. Los ids del turno los pone el guion, no el "modelo". Fijate en eso antes de venderlo como comprensión de lenguaje.
-5. Si la frase de salida tiene una marca de consejo clínico (por ejemplo un fármaco o "mg"), el guardia la reemplaza por una derivación y no llama herramientas. En la regresión forzada ese guardia se apaga a propósito para demostrar que la compuerta se pone roja.
-6. Cada herramienta pasa por el webhook local: firma HMAC, clave de idempotencia, reintentos con tope y jitter con semilla, y una cola de cartas muertas en JSONL si se acaban los intentos.
-7. El TTS parte la frase en trozos y cobra un tiempo hasta el primer byte. Si durante esa "reproducción" entra habla, y el VAD la acepta, se cancela. Si entra ruido y el perfil lo toma como habla, es un falso corte.
+1. The script builds frames. A frame is speech, silence, or noise, with milliseconds and a text. The logic does not need a WAV. There is a 20 ms silence WAV only to show that the audio interface exists (`fixtures/silence_20ms.wav`).
+2. The VAD, with one of three profiles, decides when the turn ended.
+   - **aggressive**: short silence (180 ms) and a low threshold. It cuts quickly. It also treats a 100 ms noise burst as speech.
+   - **balanced**: 400 ms of silence and a threshold that ignores that noise. This is the profile that has to pass the gate.
+   - **patient**: 800 ms. It waits longer. It does not rush a 300 ms pause.
+3. The fake STT returns partials (one more word each time) and a final. If the script asks for errors, it changes words with a fixed seed. That stands in for a weak ASR. It is not a corpus of real accents.
+4. The classifier folds the text (lowercase, accents stripped) and picks: clinical, cancel, book, find times, or unclear. The cassette says which tool to call and which sentence to speak. The script fills the booking ids, not the "model". Read that before you sell it as language understanding.
+5. If the outgoing sentence has a clinical-advice mark (for example a drug name or "mg"), the guard replaces it with a handoff and calls no tools. In the forced regression that guard is turned off on purpose so the gate goes red.
+6. Each tool goes through the local webhook: HMAC signature, idempotency key, capped retries with seeded jitter, and a JSONL dead-letter queue if the attempts run out.
+7. The TTS splits the sentence into chunks and charges a time-to-first-byte. If speech arrives during that "playback" and the VAD accepts it, playback is cancelled. If noise arrives and the profile takes it as speech, that is a false cut.
 
-El reloj simulado solo avanza en esas esperas del sistema. El tiempo en que la persona está hablando no se suma al end-to-end. El end-to-end arranca cuando la persona dejó de hablar y termina en el primer byte de audio de respuesta.
+The simulated clock only moves on those system waits. The time the person is speaking is not added to the end-to-end. End-to-end starts when the person stopped speaking and ends at the first byte of reply audio.
 
-## Idempotencia, con la misma analogía
+## Idempotency, with the same analogy
 
-El cliente dice "anotá la mesa 4" y se corta la línea. El mozo no sabe si el lápiz llegó a tocar el papel. Vuelve a decirlo con el **mismo número de pedido**. El libro responde "ya está anotado, es esta reserva" y no abre otra. Si otro cliente pide la misma mesa con otro número de pedido, la respuesta es "ocupada" y se deriva. Eso es R01 y R02 del guion.
+The guest says "write down table 4" and the line drops. The host does not know whether the pencil touched the paper. They say it again with the **same order number**. The book answers "already written, this is the reservation" and does not open another. If another guest asks for the same table with a different order number, the answer is "taken" and the call is handed off. That is R01 and R02 in the script.
 
-Si el lápiz ni siquiera tocó el papel (timeout antes de escribir) y los reintentos se agotan, el pedido va a la cola de cartas muertas y la persona es derivada. No queda una reserva fantasma. Eso es R04. `python -m voice_cascade dlq-replay` vuelve a intentar esa cola cuando el libro ya responde.
+If the pencil never touched the paper (timeout before the write) and the retries run out, the order goes to the dead-letter queue and the person is handed off. There is no ghost reservation. That is R04. `python -m voice_cascade dlq-replay` tries that queue again once the book is answering.
 
-## Glosario
+## Glossary
 
-| Palabra | Qué quiere decir acá |
+| Word | What it means here |
 | --- | --- |
-| Cascada | STT, después LLM, después TTS. Tres saltos, no uno. |
-| VAD | Regla que dice "esto es habla" y "ya se calló". |
-| Barge-in | La persona habla mientras el sistema todavía está "hablando", y hay que cortar. |
-| Falso corte | Un ruido que el VAD tomó por habla y cortó la frase al pedo. |
-| TTFT / TTFB | Tiempo hasta el primer token del modelo, o hasta el primer byte de audio. En el eval son sorteos **SIMULATED** con semilla, no un reloj de pared. |
-| Cassette | Respuesta fija según la intención. No es un modelo entrenado. |
-| Idempotencia | Misma clave, mismo resultado, un solo efecto. |
-| DLQ | Cola de lo que no se pudo confirmar después de los reintentos. |
-| Invariante | Una regla de efecto ("no hay dos reservas", "no hay consejo clínico"), no la lista exacta de tool calls. |
+| Cascade | STT, then LLM, then TTS. Three hops, not one. |
+| VAD | A rule that says "this is speech" and "they have stopped". |
+| Barge-in | The person speaks while the system is still "talking", and playback has to stop. |
+| False cut | Noise the VAD took for speech, which cut the sentence for nothing. |
+| TTFT / TTFB | Time to the first model token, or to the first audio byte. In the eval they are seeded **SIMULATED** draws, not a wall clock. |
+| Cassette | A fixed reply for an intent. Not a trained model. |
+| Idempotency | Same key, same result, one side effect. |
+| DLQ | The queue of what could not be confirmed after the retries. |
+| Invariant | A rule about effects ("no two bookings", "no clinical advice"), not the exact list of tool calls. |
 
-## Extensión de voz (0.2.0), todavía en el laboratorio
+## Voice extension (0.2.0), still in the lab
 
-A partir de 0.2.0 hay un segundo camino, al lado del guion de 49 llamadas. No reemplaza esos números (p50 896 ms y p95 1004.5 ms siguen siendo el reloj simulado del paquete 0.1.9).
+From 0.2.0 there is a second path, beside the 49-call script. It does not replace those numbers (p50 896 ms and p95 1004.5 ms are still the simulated clock from package 0.1.9).
 
-1. Un generador arma audio de juguete: una suma de armónicos, no una persona. Cada clip trae un sidecar con el inicio y el fin de la habla, en muestras exactas.
-2. El VAD de energía mira ventanas de 32 ms. Una máquina de estados decide si la persona sigue, si ya cerró el turno, o si interrumpió. Si interrumpe, se corta el TTS y el texto que queda en el historial es solo el que llegó a "sonar".
-3. El eco del agente es una heurística de correlación. No es cancelación de eco de verdad.
-4. Un informe de unas 100 llamadas sintéticas escribe p50 y p95 por etapa. Cada fila dice **SIMULATED**. El p95 trae un intervalo bootstrap. No se resta de la tabla medida del README.
-5. El webhook suma una firma con marca de tiempo (v2), clasifica qué errores se reintentan, y deja en la cola de cartas muertas el caso que no tiene arreglo reintentando. El manual de eso está en `docs/RUNBOOK.md`.
+1. A generator builds toy audio: a sum of harmonics, not a person. Each clip has a sidecar with the start and end of the speech, in exact samples.
+2. The energy VAD looks at 32 ms windows. A state machine decides whether the person is still talking, whether the turn has closed, or whether they interrupted. On an interrupt, TTS stops and the text left in the history is only what had already "played".
+3. Agent echo is a correlation heuristic. It is not real echo cancellation.
+4. A report of about 100 synthetic calls writes p50 and p95 per stage. Every row says **SIMULATED**. The p95 carries a bootstrap interval. It is not subtracted from the measured table in the README.
+5. The webhook adds a signed timestamp (v2), classifies which errors are retried, and leaves the case that retries cannot fix on the dead-letter queue. The runbook for that is `docs/RUNBOOK.md`.
 
-Silero (una red de VAD) está como marca opcional, apagada, sin descarga de modelo. Las decisiones D1 a D5 siguen abiertas: `docs/voice/OPEN_DECISIONS.md`.
+Silero (a VAD network) is an optional marker, off, with no model download. Decisions D1 to D5 stay open: `docs/voice/OPEN_DECISIONS.md`.
 
-El comando que regenera el informe es `python -m voice_cascade eval-voice`. El costo de ese comando es cero. No llama a un proveedor.
+The command that regenerates the report is `python -m voice_cascade eval-voice`. That command costs zero. It does not call a provider.
 
-## Límites honestos
+## Honest limits
 
-- No mide proveedores en CI. La tabla "Measured with real providers" del README tiene una corrida pegada a mano (n=20, un proveedor, una corrida, no es un SLA). El título del archivo tiene que ser exactamente ese. Si STT o TTS son un stub local, el archivo se llama "Partially measured" y no entra en esa tabla. Si falta configuración, o si la estimación pasa `MAX_LIVE_SPEND_USD`, el proceso sale con código 2 y no manda ningún request. `unsupported_availability_claim` es un heurístico: marca una hora, una fecha ("el 20 de octubre", "el 22", `20/10`), una confirmación ("agendé", "confirmado") o un turno en inglés ("Tuesday at 10am"), y solo si ese turno no llamó una herramienta de agenda. No marca una negación ("no puedo", "I can't") ni el horario de atención ("de lunes a viernes"). Puede fallar en los dos sentidos y no reemplaza una lectura humana. `cost.estimated_usd` es tokens por el precio del entorno. `provider_reported_usd` aparece solo si `usage.cost_in_usd_ticks` es un entero (1 tick = 1e-10 USD).
-- El "LLM" no elige el id del turno leyendo la frase. Lo pone el guion.
-- El VAD del guion de 49 llamadas es un umbral de energía sobre frames con texto. El camino nuevo (0.2.0) usa el mismo tipo de umbral sobre PCM sintético. No es una red neuronal. Silero queda apagado.
-- No hay WebRTC, ni SIP, ni consentimiento de grabación, ni varios idiomas.
-- Los nombres y teléfonos son inventados y además se redactan en los logs. Redactar ficción no es cumplir una ley de datos personales.
-- La regresión `make eval-regression` **tiene que fallar**. Si pasa, la compuerta está rota.
+- It does not measure providers in CI. The README table "Measured with real providers" has one run pasted by hand (n=20, one provider, one run, not an SLA). The file title has to be exactly that. If STT or TTS is a local stub, the file is titled "Partially measured" and does not go in that table. If config is missing, or the estimate is over `MAX_LIVE_SPEND_USD`, the process exits 2 and sends no request. `unsupported_availability_claim` is a heuristic: it flags a clock time, a date ("October 20", "the 22nd", `20/10`), a confirmation ("I booked you", "confirmed"), or a slot ("Tuesday at 10am"), and only if that turn did not call a calendar tool. It does not flag a negation ("I can't") or office hours ("Monday to Friday"). It can fail in both directions and does not replace a human read. `cost.estimated_usd` is tokens times the env price. `provider_reported_usd` appears only when `usage.cost_in_usd_ticks` is an integer (1 tick = 1e-10 USD). The 2026-10-17/18 latency figures were measured on Spanish synthesized caller audio and were not re-measured after the English rewrite.
+- The "LLM" does not choose the booking id by reading the sentence. The script sets it.
+- The VAD on the 49-call script is an energy threshold over frames that carry text. The new path (0.2.0) uses the same kind of threshold on synthetic PCM. It is not a neural net. Silero stays off.
+- There is no WebRTC, no SIP, no recording consent, and no second language.
+- Names and phone numbers are invented and are also redacted in the logs. Redacting fiction is not compliance with a privacy law.
+- The regression `make eval-regression` **has to fail**. If it passes, the gate is broken.

@@ -20,7 +20,7 @@ Offline lab that tests a simulated STT → LLM → TTS cascade for appointment s
 
 A voice cascade hides time in five places: waiting to decide the caller has stopped, waiting for a final transcript, waiting for the first model token, waiting for a tool webhook, and waiting for the first audio byte. Retries on that webhook can also book the same slot twice if the side effect is not idempotent.
 
-On the fictional **Clínica Aurora** (scheduling only, never clinical advice) the harness runs 49 scripted calls. The operating point is the **balanced** VAD profile. The latency cohort is 36 of those calls.
+On the fictional **Aurora Clinic** (scheduling only, never clinical advice) the harness runs 49 scripted calls. The operating point is the **balanced** VAD profile. The latency cohort is 36 of those calls.
 
 **SIMULATED placeholder, 2026-10-17**, package version **0.1.9**, command `python -m voice_cascade eval` (balanced profile). git revision: `4fb26ef5a281cc7b325c75c5f6e0f7a96e9a16fa` on main. The same command on that revision prints these percentiles. These 49-call figures were **not re-measured as a published 0.2.0 result**, and the 0.1.9 record does not name a Python version. On this tree the command prints `version=0.2.1` because that is the package version. A local run on `bdd841a` with Python 3.12.3 printed the same percentiles. That run confirms the clock still emits the 0.1.9 figures. It is not a new measurement.
 
@@ -40,7 +40,7 @@ Short demo in English. It includes a real-provider latency run on a single provi
 
 - [video](docs/demo/voice_agent_cascade_lab_demo_en_v2_real.mp4)
 - [English captions](docs/demo/voice_agent_cascade_lab_demo_en_v2_real.en.srt)
-- [Spanish captions](docs/demo/voice_agent_cascade_lab_demo_en_v2_real.es.srt)
+- [English captions, second file](docs/demo/voice_agent_cascade_lab_demo_en_v2_real.es.srt)
 
 ## Business case
 
@@ -167,7 +167,7 @@ Client-style use cases are fictional. They are patterns, not accounts.
 
 | Use case | Status (Implemented / Design only) | Problem | Who approves | Gated effects | How this repo handles it |
 | --- | --- | --- | --- | --- | --- |
-| Clínica Aurora appointment scheduling | Implemented | Callers book, ask for slots, or cancel. Latency and double booking are the failure modes. | Clinic operations owns the slot inventory. A human takes clinical questions and failed tools. | `book_appointment`, `cancel_appointment`. `find_slots` is read-only. | Scripted cascade, clinical guard, HMAC webhook, idempotency, DLQ, invariant gate. |
+| Aurora Clinic appointment scheduling | Implemented | Callers book, ask for slots, or cancel. Latency and double booking are the failure modes. | Clinic operations owns the slot inventory. A human takes clinical questions and failed tools. | `book_appointment`, `cancel_appointment`. `find_slots` is read-only. | Scripted cascade, clinical guard, HMAC webhook, idempotency, DLQ, invariant gate. |
 | Pharmacy refill reminder | Design only | Outbound reminder that a refill exists, without discussing dose. | Pharmacist approves the reminder template and the patient list. | Place a call. Must not state a dose or a diagnosis. | Not built. The guard and the escalation copy are the pattern to copy. No dialer. |
 | Telecom contact-center triage | Design only | Route a service call to billing, outage, or a person. | Operations approves the intent list and which intents may open a ticket. | Open or update a ticket. | Not built. One intent family is the whole lab. More intents would be new cassettes plus a new gate. |
 
@@ -226,7 +226,7 @@ The business problem is narrow: a scheduling queue spends handle time on one int
 
 ### 4. Business value
 
-> **Synthetic example.** The customer below (a fictional diagnostic-imaging network with a Spanish booking line) is invented, and every business figure is a synthetic assumption, tagged **[SYN]**.
+> **Synthetic example.** The customer below (a fictional diagnostic-imaging network with an English booking line) is invented, and every business figure is a synthetic assumption, tagged **[SYN]**.
 >
 > - **[REPO]** marks numbers recorded in this repo, with the commit and version the repo gives.
 > - **[REPO-EST]** marks this repo's own [EST] figures.
@@ -298,7 +298,7 @@ p50 and p95 in this table are rounded to 0.1 ms from [docs/live/2026-10-17-resul
 
 Sixty HTTP calls, all status 200 (20 STT, 20 LLM, 20 TTS). The file title is `Measured with real providers`. A file titled `Partially measured: LLM real, STT/TTS stub` does not belong here. Stub stage times are not in the end-to-end row. The command writes `var/live/results.json` and does not edit this file. The copy used for these cells is [docs/live/2026-10-17-results.json](docs/live/2026-10-17-results.json).
 
-n=20, one provider, one run, not an SLA. VAD is simulated and the calendar tool does not run in live mode. Caller audio was synthesized with TTS, in Spanish, not a human voice. One response tripped `unsupported_availability_claim:S15`. `invariants.passed` is false, so the command exits 1. That failure is shown, not dropped. The results file does not store the process exit code. `cmd_live` returns 1 when `invariants.passed` is not true, and [docs/LIVE_RUN.md](docs/LIVE_RUN.md) states that exit. The run used a temporary adapter outside this repo. A rehearsal with the same code, [docs/live/2026-10-17-rehearsal.json](docs/live/2026-10-17-rehearsal.json), had end-to-end p50/p95 2050 / 3386.3 ms, so run-to-run variation is real. These rows are not compared with the SIMULATED table above.
+n=20, one provider, one run, not an SLA. VAD is simulated and the calendar tool does not run in live mode. Caller audio was synthesized with TTS in Spanish on 2026-10-17 (original measurement data), not a human voice. Latency was not re-measured after the English rewrite. One response tripped `unsupported_availability_claim:S15`. `invariants.passed` is false, so the command exits 1. That failure is shown, not dropped. The results file does not store the process exit code. `cmd_live` returns 1 when `invariants.passed` is not true, and [docs/LIVE_RUN.md](docs/LIVE_RUN.md) states that exit. The run used a temporary adapter outside this repo. A rehearsal with the same code, [docs/live/2026-10-17-rehearsal.json](docs/live/2026-10-17-rehearsal.json), had end-to-end p50/p95 2050 / 3386.3 ms, so run-to-run variation is real. These rows are not compared with the SIMULATED table above.
 
 The stored live end-to-end p95 (2587.7000000000007 ms, `84cfb1a`, n=20) is above the lab's 2500 ms budget (`StageBudget.e2e_ms`). The live TTS first-byte p95 is 380.05 ms (p50 302 ms), above the 250 ms TTS TTFB budget (`StageBudget.tts_ttfb_ms`). First-byte p50/p95 are not keys in the `latency` object. They come from rounding each `turns[].tts.ttfb_ms` to an integer millisecond and taking the same percentile. Live mode does not apply `StageBudget`, and this exit 1 is the heuristic failure, not a budget failure. Definitions differ: live end-to-end sums full STT, LLM, and TTS audio, while the lab end-to-end budget stops at the first TTS byte. The 380.05 ms figure is first-byte time. The TTS row in the table is full audio.
 
@@ -331,7 +331,7 @@ python3 -m voice_cascade eval-regression
 
 CI runs that command and fails the job if the exit code is 0. The regression turns the clinical guard off and injects the advice sentence stored under `regression_clinical` in the cassette. A green regression means the gate can no longer see clinical advice.
 
-Local `python3 -m pytest` on Python 3.12.3, package 0.2.1, with the addopts in `pyproject.toml` (`--cov=voice_cascade`, fail-under 80): **105 passed**, total coverage **92.97%**. The suite is unchanged from `bdd841a`. It is not a CI badge.
+The 0.2.1 docs recorded one local `python3 -m pytest` on Python 3.12.3, package 0.2.1, with the addopts in `pyproject.toml` (`--cov=voice_cascade`, fail-under 80): **105 passed**, total coverage **92.97%**, when the suite still matched `bdd841a`. After the English rewrite, the same command on Python 3.12.3: **105 passed**, total coverage **92.95%**. It is not a CI badge.
 
 Latency comparison (SIMULATED):
 
@@ -356,7 +356,7 @@ python -m voice_cascade live
 
 | Doc | What it is for |
 | --- | --- |
-| [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md) | Interview walkthrough, rioplatense Spanish |
+| [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md) | Walkthrough for engineers and buyers |
 | [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) | ROI sketch, all money figures [EST] |
 | [docs/BUSINESS_VALUE.md](docs/BUSINESS_VALUE.md) | Value-realization plan. Business figures [SYN] unless marked [REPO] or [REPO-EST] |
 | [docs/DISCOVERY.md](docs/DISCOVERY.md) | Ten questions and what the answer changes |

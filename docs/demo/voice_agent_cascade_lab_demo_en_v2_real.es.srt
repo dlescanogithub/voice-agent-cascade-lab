@@ -1,51 +1,50 @@
 1
 00:00:00,880 --> 00:00:04,080
-Los números de latencia del README son simulados.
+The README's latency numbers are simulated.
 
 2
 00:00:04,150 --> 00:00:06,750
-Así que medí una cascada de voz real.
+So I measured a real voice cascade.
 
 3
 00:00:07,110 --> 00:00:13,750
-El repo no puede llamar a la voz de xAI, así que escribí un adaptador descartable. No
-está en el repo.
+The repo can't call xAI speech, so I wrote a scratch adapter. It is not in the
+repo.
 
 4
 00:00:13,860 --> 00:00:16,200
-El código del propio repo hace la medición.
+The repo's own code does the timing.
 
 5
 00:00:16,840 --> 00:00:22,580
-Veinte frases, cada una por voz a texto, el modelo y texto a voz.
+Twenty utterances, each through speech-to-text, the model, and text-to-speech.
 
 6
 00:00:22,610 --> 00:00:25,630
-Llamadas reales, un proveedor, una corrida.
+Real calls, one provider, one run.
 
 7
 00:01:00,290 --> 00:01:07,030
-De punta a punta, mediana dos mil veintidós milisegundos, p95 dos mil quinientos
-ochenta y ocho.
+End to end, median two thousand twenty-two milliseconds, p95 two thousand five
+hundred eighty-eight.
 
 8
 00:01:07,060 --> 00:01:12,180
-Voz a texto, modelo y texto a voz: reales. Detección de turnos: simulada, no se
-cuenta.
+Speech, model, voice: real. Turn detection: simulated, not counted.
 
 9
 00:01:12,270 --> 00:01:15,930
-Una respuesta activó el chequeo del repo. Costo: seis centavos.
+One reply tripped the repo's check. Cost: six cents.
 
 10
 00:01:17,070 --> 00:01:21,120
-Para un cliente: primero modo shadow, después escritura con gate.
+For a client: shadow mode first, then a gated write.
 
 11
 00:01:21,250 --> 00:01:25,620
-Riesgo: un p95 de veinte turnos leído como nivel de servicio.
+Risk: a twenty-turn p95 read as a service level.
 
 12
 00:01:25,860 --> 00:01:31,240
-ROI: [EST], unas dos mil novecientas unidades monetarias por mes, brutas.
+ROI: [EST], about twenty-nine hundred currency units a month, gross.
 

@@ -92,7 +92,7 @@ def test_energy_backend_is_binary_and_rejects_short_windows() -> None:
 def test_hysteresis_holds_between_thresholds() -> None:
     profile = get_turn_profile("balanced")
     backend = ScriptedBackend([1.0, 1.0, 1.0, 1.0, 0.40, 0.40, 0.0])
-    machine = TurnMachine(profile, backend, assistant_text="hola")
+    machine = TurnMachine(profile, backend, assistant_text="hello")
     for _ in range(4):
         machine.push_window(_zeros(), _zeros())
     assert machine.state == "UserSpeaking"

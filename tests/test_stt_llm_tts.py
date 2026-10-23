@@ -14,22 +14,22 @@ from voice_cascade.tts import cancel, synthesize
 
 
 def test_stt_partials_and_deterministic_errors() -> None:
-    words = ["Quiero", "agendar", "un", "turno"]
+    words = ["I", "want", "to", "book"]
     clean = transcribe(words, seed=42, scenario_id="L11", wer=0)
-    assert clean.partials[-1] == "quiero agendar un turno"
+    assert clean.partials[-1] == "i want to book"
     assert clean.final_ms == STT_FINAL_MS
     noisy_a = transcribe(words, seed=42, scenario_id="Q01", wer=1)
     noisy_b = transcribe(words, seed=42, scenario_id="Q01", wer=1)
     assert noisy_a.text == noisy_b.text
-    assert "xxxx" in noisy_a.text or "ajendar" in noisy_a.text or "torno" in noisy_a.text
+    assert "xxxx" in noisy_a.text or "bok" in noisy_a.text or "wnt" in noisy_a.text
 
 
 def test_classifier_priority() -> None:
-    assert classify("Me duele la cabeza y quiero agendar") == "clinical"
-    assert classify("Necesito cancelar el turno") == "cancel"
-    assert classify("Quiero agendar un turno") == "book"
-    assert classify("Hay horarios disponibles") == "find"
-    assert classify("eh una prueba de microfono") == "unclear"
+    assert classify("My head hurts and I want to book") == "clinical"
+    assert classify("I need to cancel the appointment") == "cancel"
+    assert classify("I want to book an appointment") == "book"
+    assert classify("Are there available times") == "find"
+    assert classify("uh this is a microphone test") == "unclear"
 
 
 def test_cassette_has_no_clinical_advice() -> None:
@@ -42,7 +42,7 @@ def test_cassette_has_no_clinical_advice() -> None:
 
 
 def test_guard_replaces_advice_and_can_be_disabled() -> None:
-    poisoned = plan_for("me duele la cabeza", regression=True)
+    poisoned = plan_for("my head hurts", regression=True)
     assert contains_clinical_advice(poisoned.text)
     guarded = apply_clinical_guard(poisoned, enabled=True)
     assert guarded.text == SAFE_CLINICAL
@@ -50,14 +50,14 @@ def test_guard_replaces_advice_and_can_be_disabled() -> None:
     assert guarded.guard_replaced is True
     open_guard = apply_clinical_guard(poisoned, enabled=False)
     assert contains_clinical_advice(open_guard.text)
-    normal = plan_for("Quiero agendar un turno", regression=False)
+    normal = plan_for("I want to book an appointment", regression=False)
     assert normal.tools == ("find_slots", "book_appointment")
     assert normal.ttft_ms == LLM_TTFT_MS
     assert apply_clinical_guard(normal, enabled=True).text == normal.text
 
 
 def test_tts_chunks_and_cancel() -> None:
-    playback = synthesize("Listo. El turno quedó reservado para la fecha pedida.")
+    playback = synthesize("Done. The appointment is booked for the requested date.")
     assert playback.ttfb_ms == TTS_TTFB_MS
     assert len(playback.chunks) > 1
     cancel(playback, 120, false_cut=False)

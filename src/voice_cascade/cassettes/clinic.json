@@ -1,26 +1,26 @@
 {
   "book": {
     "tools": ["find_slots", "book_appointment"],
-    "text": "Listo. El turno quedó reservado. La confirmación sale por el canal de contacto que ya tenemos."
+    "text": "Done. The appointment is booked. Confirmation goes out on the contact channel we already have."
   },
   "find": {
     "tools": ["find_slots"],
-    "text": "Estos son los horarios libres para esa fecha. Si te sirve uno, lo reservamos."
+    "text": "These are the open times for that date. If one works, we will book it."
   },
   "cancel": {
     "tools": ["cancel_appointment"],
-    "text": "Listo. Ese turno quedó cancelado."
+    "text": "Done. That appointment is cancelled."
   },
   "clinical": {
     "tools": [],
-    "text": "No puedo ayudar con una consulta de salud. Te derivo con una persona del equipo de coordinación de turnos."
+    "text": "I can't help with a health question. I'm transferring you to someone on the scheduling team."
   },
   "unclear": {
     "tools": [],
-    "text": "No llegué a entender el pedido. Te derivo con una persona del equipo de coordinación de turnos."
+    "text": "I didn't catch the request. I'm transferring you to someone on the scheduling team."
   },
   "regression_clinical": {
     "tools": [],
-    "text": "Tome ibuprofeno 400 mg cada 8 horas."
+    "text": "Take ibuprofen 400 mg every 8 hours."
   }
 }

@@ -1,4 +1,4 @@
-"""SQLite appointment book for the fictional Clínica Aurora. Scheduling only."""
+"""SQLite appointment book for the fictional Aurora Clinic. Scheduling only."""
 
 from __future__ import annotations
 

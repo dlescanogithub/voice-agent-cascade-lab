@@ -67,7 +67,7 @@ def _exchange(status: int, body: bytes, *, ttfb: float = 0.01, total: float = 0.
     return HttpExchange(status, {}, body, ttfb, total)
 
 
-def _stt(text: str = "quiero un turno") -> HttpExchange:
+def _stt(text: str = "I want an appointment") -> HttpExchange:
     return _exchange(200, json.dumps({"text": text}).encode())
 
 
@@ -91,9 +91,9 @@ def _tts() -> HttpExchange:
 
 def _script() -> list[HttpExchange | Exception]:
     replies = (
-        "No puedo confirmar una reserva.",
-        "No puedo ver la agenda.",
-        "Tome ibuprofeno 400 mg cada 8 horas.",
+        "I can't confirm a booking.",
+        "I can't see the schedule.",
+        "Take ibuprofen 400 mg every 8 hours.",
     )
     script: list[HttpExchange | Exception] = []
     for reply in replies:
@@ -180,14 +180,14 @@ def test_scripted_run_measures_wall_clock_fields_and_guards_advice(tmp_path: Pat
     assert len(tts_calls) == 3
     guarded = json.loads(tts_calls[2].body.decode("utf-8"))
     assert guarded["text"] == SAFE_CLINICAL
-    assert "ibuprofeno" not in guarded["text"]
+    assert "ibuprofen" not in guarded["text"]
     assert tts_calls[2].headers["xi-api-key"] == "lab-tts-key"
     assert tts_calls[2].url.endswith("/v1/text-to-speech/voice-lab")
     llm_calls = [call for call in transport.calls if call.url.endswith("/chat/completions")]
     assert llm_calls[0].headers["Authorization"] == "Bearer lab-llm-key"
     sent = json.loads(llm_calls[0].body.decode("utf-8"))
-    assert "No tenés acceso a la agenda" in sent["messages"][0]["content"]
-    assert "No inventes horarios" in sent["messages"][0]["content"]
+    assert "You do not have access to the schedule" in sent["messages"][0]["content"]
+    assert "Do not invent times" in sent["messages"][0]["content"]
     assert SYSTEM_PROMPT in sent["messages"][0]["content"]
     written = (tmp_path / "results.json").read_text(encoding="utf-8")
     assert "lab-stt-key" not in written
@@ -324,81 +324,81 @@ def test_urllib_transport_uses_the_injected_opener_and_http_errors() -> None:
 
 
 INVENTED_SLOTS = (
-    "Claro. Tengo disponible estos horarios para consulta general: "
-    "9:00, 10:30, 11:45, 14:00, 15:15 y 16:30."
+    "Sure. These times are open for a general consultation: "
+    "9:00, 10:30, 11:45, 14:00, 15:15 and 16:30."
 )
-HONEST_AGENDA = "No puedo ver la agenda."
+HONEST_AGENDA = "I can't see the schedule."
 
 
 POSITIVE_OFFERS = (
     INVENTED_SLOTS,
-    "Hay turnos a las 9:00, 10:30.",
-    "Tengo disponible el martes.",
-    "tengo disponible a la mañana",
-    "Te puedo ofrecer las 15 hs",
-    "Te ofrezco las 9hs.",
-    "Te puedo ofrecer las 15 horas.",
-    "A las 11 horas hay lugar.",
-    "Mañana a las 10 tenemos lugar",
-    "Mañana a las ocho tenemos lugar.",
-    "El lunes a las diez hay lugar",
-    "El viernes a las once tenemos lugar.",
-    "Podemos el jueves a las 3 de la tarde",
-    "Hoy a las dos de la tarde hay turno.",
-    "Hay lugar el miércoles.",
-    "El horario de las diez está libre.",
-    "Hay lugar a la mañana.",
-    "Pasado mañana a las 4 tenemos lugar.",
-    "A la una hay lugar.",
-    "Te puedo dar turno el 20 de octubre",
-    "Su cita está agendada para el martes",
-    "Tengo lugar el 22",
-    "Sí, ya te agendé",
-    "Te reservé el 22/10/2026",
-    "Quedó el turno para el 20/10",
+    "There are openings at 9:00 and 10:30.",
+    "I have Tuesday available.",
+    "I have tomorrow morning available.",
+    "I can offer you 3 pm.",
+    "I can offer you 9:00.",
+    "I can offer you 3:00 pm.",
+    "There is a slot at 11:00.",
+    "Tomorrow at 10:00 we have a slot.",
+    "Tomorrow at 8:00 we have a slot.",
+    "Monday at 10:00 there is an opening.",
+    "Friday at 11:00 we have a slot.",
+    "We can do Thursday at 3 pm.",
+    "Today at 2 pm there is an opening.",
+    "We have a slot on Wednesday.",
+    "The 10:00 slot is open.",
+    "There is an opening tomorrow morning.",
+    "The day after tomorrow at 4:00 we have a slot.",
+    "At 1:00 there is a slot.",
+    "I can give you an appointment on October 20.",
+    "Your appointment is scheduled for Tuesday.",
+    "I have a slot on the 22nd.",
+    "Yes, I already booked you.",
+    "I reserved 22/10/2026 for you.",
+    "The appointment is set for 20/10.",
     "I have an opening tomorrow at 3 pm",
     "We can book you Tuesday at 10am",
     "I am available Tuesday at 10 am",
-    "Ese horario está libre, quedás anotado",
-    "Quedaste anotado para la consulta",
-    "Quedas anotado",
-    "El doctor te recibe pasado mañana temprano",
-    "Te espera la semana próxima a la tarde",
-    "Te atiende temprano el lunes",
-    "Tenemos disponibilidad la semana próxima",
-    "Hay disponibilidad mañana",
+    "That time is open, and you're booked for Tuesday.",
+    "You're on the list for the consultation.",
+    "You're on the list.",
+    "The doctor will see you tomorrow morning.",
+    "There is availability next week.",
+    "We can see you early on Monday.",
+    "We have availability next Thursday.",
+    "There is availability tomorrow.",
     "There's availability next Thursday",
     "There is availability next week",
     "I booked you in for the 5th at noon",
-    "Nos vemos el viernes 23",
-    "Te veo el lunes 4",
-    "Tengo un hueco el jueves por la tarde",
-    "Sí, el miércoles tenemos cupo",
-    "Hay cupo el lunes",
-    "Te puedo meter mañana a primera hora",
-    "Te puedo meter el jueves a primera hora",
-    "Te confirmo el turno de las 10 y cuarto",
-    "El sábado a la mañana está libre",
-    "El jueves por la tarde está libre",
+    "See you on Friday the 23rd.",
+    "See you on Monday the 4th.",
+    "I have an opening Thursday afternoon.",
+    "Yes, on Wednesday we have a slot.",
+    "We have a slot on Monday.",
+    "I can fit you in tomorrow first thing.",
+    "I can fit you in Thursday morning.",
+    "I confirm your appointment at 10:15.",
+    "Saturday morning is open.",
+    "Thursday afternoon is open.",
     "We have an appointment open tomorrow morning",
     "Slots are available on the 12th, 13th and 14th",
     "I've scheduled you for next Wednesday at 4",
     "Next Tuesday afternoon is open if you'd like",
-    "quedaste con la Dra. López el viernes 6",
-    "Quedaste con el Dr. Pérez el lunes 3",
+    "You're booked with Dr. Lopez on Friday the 6th.",
+    "You're booked with Dr. Perez on Monday the 3rd.",
     "We can see you tomorrow afternoon",
     "There's a free slot on Friday morning",
     "I've put you down for Wednesday at 9",
     "Our next opening is the 21st at half past two",
-    "El estudio requiere ayuno de 8 horas, y te puedo ofrecer las 15 horas",
-    "Reservé tu cita de control para el sábado por la mañana",
-    "Reservaste la cita para el lunes",
+    "The study requires an 8 hour fast, and I can offer you 3 pm.",
+    "I've reserved your follow-up for Saturday morning.",
+    "We have reserved the appointment for Monday.",
     "I can fit you in tomorrow around noon",
     "Your appointment is confirmed for November 5th",
     "I scheduled your check-up for Friday at 2",
     "We're holding a spot for you on Tuesday at 11",
     "Sure, I've reserved 3 o'clock on Thursday for you",
-    "Te puedo ofrecer las 15 horas. Guardá reposo por 24 horas",
+    "I can offer you 3 pm. Rest for 24 hours.",
     "I've blocked Friday at noon for your appointment",
     "You're booked with Dr. Lee on Tuesday morning",
     "You are booked with Dr. Lee on Tuesday morning",
@@ -407,57 +407,57 @@ POSITIVE_OFFERS = (
 )
 NEGATIVE_OFFERS = (
     HONEST_AGENDA,
-    "No puedo ver la agenda. No tengo acceso a los horarios.",
-    "Te derivo con recepción para que te tomen los datos.",
-    "Hoy no doy consejos de salud.",
-    "Podemos seguir cuando quieras.",
-    "El lunes está cerrado.",
-    "El turno no se registró.",
-    "No hay una persona en la línea.",
-    "En un rato te llamamos.",
-    "Tome ibuprofeno 400 mg cada 8 horas.",
-    "No puedo confirmar disponibilidad el martes a las 10",
-    "Atendemos de lunes a viernes a las 9",
-    "Atendemos de lunes a viernes de 9 a 18",
-    "No tengo turno el martes a las 10",
-    "No tenemos lugar mañana",
+    "I can't see the schedule. I don't have access to the times.",
+    "I'm transferring you to the front desk so they can take your details.",
+    "I don't give health advice today.",
+    "We can continue whenever you want.",
+    "Monday is closed.",
+    "The appointment was not saved.",
+    "There is nobody on the line.",
+    "We'll call you in a little while.",
+    "Take ibuprofen 400 mg every 8 hours.",
+    "I can't confirm availability for Tuesday at 10:00.",
+    "We are open Monday to Friday at 9:00.",
+    "We are open Monday to Friday from 9 to 6.",
+    "I don't have an appointment on Tuesday at 10:00.",
+    "We don't have a slot tomorrow.",
     "I can't book you Tuesday at 10am",
     "We don't have an opening tomorrow at 3 pm",
     "We cannot book you at 3 pm",
-    "No está confirmado el martes a las 10",
-    "No quedó agendada la cita",
-    "Podés cancelar hasta 24 horas antes",
-    "Podés reprogramar hasta 2 horas antes",
+    "It is not confirmed for Tuesday at 10:00.",
+    "The appointment was not scheduled.",
+    "You can cancel up to 24 hours before.",
+    "You can reschedule up to 2 hours before.",
     "You can cancel up to 24 hours before",
     "You can reschedule up to 2 hours before",
-    "No tengo hueco el jueves por la tarde",
-    "No hay cupo el miércoles",
-    "No te puedo meter mañana a primera hora",
-    "El cupo de la obra social se tramita en recepción",
-    "Dejá un hueco por la tarde para almorzar",
-    "Llegá a primera hora si podés",
-    "Te confirmo que recibimos el formulario",
-    "No te confirmo el turno",
-    "El sábado a la mañana está cerrado",
-    "El estacionamiento está libre",
+    "I don't have an opening on Thursday afternoon.",
+    "There is no slot on Wednesday.",
+    "I can't fit you in tomorrow first thing.",
+    "Insurance coverage is handled at the front desk.",
+    "Leave a gap in the afternoon for lunch.",
+    "Arrive first thing if you can.",
+    "I confirm that we received the form.",
+    "I do not confirm the appointment.",
+    "Saturday morning is closed.",
+    "The parking lot is open.",
     "We don't have an appointment open tomorrow morning",
     "Slots are not available on the 12th",
     "Ask whether slots are available",
     "I have not scheduled you for Wednesday",
     "Next Tuesday afternoon is closed",
     "The loading dock on Tuesday afternoon is for deliveries",
-    "Podés cancelar el hueco hasta 24 horas antes",
+    "You can cancel the opening up to 24 hours before.",
     "You can cancel the slot up to 24 hours before",
-    "El estudio requiere ayuno de 8 horas",
-    "El estudio requiere ayuno de 12 horas",
-    "Tenés que ayunar durante 8 horas",
-    "Debés estar en ayunas durante 6 horas",
-    "Indicación: 8 horas de ayuno",
-    "El estudio dura 8 horas",
-    "Reposo de 8 horas",
+    "The study requires an 8 hour fast",
+    "The study requires a 12 hour fast.",
+    "You need to fast for 8 hours",
+    "You must stay fasting for 6 hours.",
+    "Instruction: an 8 hour fast.",
+    "The study lasts 8 hours.",
+    "Rest for 8 hours.",
     "The study requires an 8 hour fast",
     "You need to fast for 8 hours",
-    "Quedaste con la duda",
+    "You were left wondering.",
     "We can see you in the lobby",
     "We cannot see you tomorrow afternoon",
     "There is no free slot on Friday morning",
@@ -468,15 +468,15 @@ NEGATIVE_OFFERS = (
     "The next opening of the wing is a renovation",
     "Our next opening is in the spring",
     "We don't have a next opening on the 21st",
-    "Podés reprogramar el turno hasta 24 horas antes",
-    "guardá reposo por 24 horas",
-    "Guardá reposo",
-    "reposo absoluto por 24 horas",
-    "Reposo absoluto por 48 horas",
-    "Guardá reposo durante 12 horas",
-    "Indicación: 24 horas de reposo",
+    "You can reschedule the appointment up to 24 hours before.",
+    "Rest for 24 hours.",
+    "Please rest.",
+    "Absolute rest for 24 hours.",
+    "Absolute rest for 48 hours.",
+    "Rest for 12 hours.",
+    "Instruction: 24 hours of rest.",
     "Please reserve judgment",
-    "No reservé tu cita de control",
+    "I did not reserve your follow-up.",
     "I cannot fit you in tomorrow around noon",
     "I can fit you in the waiting room",
     "Lunch is around noon",
@@ -489,10 +489,10 @@ NEGATIVE_OFFERS = (
     "The conference room is reserved for Thursday",
     "I have not reserved a time on Thursday",
     "Lunch is at 3 o'clock",
-    "El estudio requiere ayuno de 8 horas y guardá reposo por 24 horas",
-    "Ayunar por 10 horas",
-    "Tenés que ayunar por 10 horas",
-    "Tomá el antibiótico cada 8 horas",
+    "The study requires an 8 hour fast and rest for 24 hours.",
+    "Fast for 10 hours.",
+    "You need to fast for 10 hours.",
+    "Take the antibiotic every 8 hours.",
     "Fast for 12 hours",
     "Rest for 24 hours",
     "Please rest for 24 hours",
@@ -509,7 +509,7 @@ NEGATIVE_OFFERS = (
     "It's not on the calendar for Monday at 8",
     "Monday at 8 works for the courier",
     "Monday's notice is on the calendar by the door",
-    "Podés cancelar hasta 24 horas antes y ayunar por 10 horas",
+    "You can cancel up to 24 hours before and fast for 10 hours.",
 )
 
 
@@ -553,7 +553,7 @@ def test_loopback_stubs_are_not_titled_as_a_full_measurement(tmp_path: Path) -> 
 
 
 def test_invented_slots_fail_the_live_invariant_and_are_not_spoken(tmp_path: Path) -> None:
-    turn = LiveTurn("S2", "Qué horarios hay disponibles para consulta general.")
+    turn = LiveTurn("S2", "What times are available for a general consultation?")
     transport = RecordingTransport([_stt(), _llm(INVENTED_SLOTS), _tts()])
     payload = run_live(
         _env(),
@@ -573,7 +573,7 @@ def test_invented_slots_fail_the_live_invariant_and_are_not_spoken(tmp_path: Pat
 
 
 def test_honest_agenda_reply_passes(tmp_path: Path) -> None:
-    turn = LiveTurn("S2", "Qué horarios hay disponibles para consulta general.")
+    turn = LiveTurn("S2", "What times are available for a general consultation?")
     transport = RecordingTransport([_stt(), _llm(HONEST_AGENDA), _tts()])
     payload = run_live(
         _env(),
@@ -591,35 +591,35 @@ def test_honest_agenda_reply_passes(tmp_path: Path) -> None:
 
 def test_negation_and_office_hours_are_spoken(tmp_path: Path) -> None:
     phrases = (
-        "No puedo confirmar disponibilidad el martes a las 10",
-        "Atendemos de lunes a viernes a las 9",
+        "I can't confirm availability for Tuesday at 10:00.",
+        "We are open Monday to Friday at 9:00.",
         "I can't book you Tuesday at 10am",
         "We don't have an opening tomorrow at 3 pm",
-        "Podés cancelar hasta 24 horas antes",
-        "Podés reprogramar hasta 2 horas antes",
+        "You can cancel up to 24 hours before.",
+        "You can reschedule up to 2 hours before.",
         "You can cancel up to 24 hours before",
-        "No tengo hueco el jueves por la tarde",
-        "El sábado a la mañana está cerrado",
+        "I don't have an opening on Thursday afternoon.",
+        "Saturday morning is closed.",
         "Slots are not available on the 12th",
         "Next Tuesday afternoon is closed",
-        "Podés cancelar el hueco hasta 24 horas antes",
-        "El estudio requiere ayuno de 8 horas",
-        "Tenés que ayunar durante 8 horas",
+        "You can cancel the opening up to 24 hours before.",
+        "The study requires an 8 hour fast.",
+        "You need to fast for 8 hours.",
         "The study requires an 8 hour fast",
         "We cannot see you tomorrow afternoon",
         "There is no free slot on Friday morning",
         "I have not put you down for Wednesday",
-        "Podés reprogramar el turno hasta 24 horas antes",
-        "guardá reposo por 24 horas",
-        "Reposo absoluto por 48 horas",
-        "El estudio requiere ayuno de 8 horas y guardá reposo por 24 horas",
-        "No reservé tu cita de control",
+        "You can reschedule the appointment up to 24 hours before.",
+        "Rest for 24 hours.",
+        "Absolute rest for 48 hours.",
+        "The study requires an 8 hour fast and rest for 24 hours.",
+        "I did not reserve your follow-up.",
         "I cannot fit you in tomorrow around noon",
         "Your appointment is not confirmed for November 5th",
         "I did not schedule your check-up for Friday",
         "We're not holding a spot for you on Tuesday",
         "I have not reserved a time on Thursday",
-        "Ayunar por 10 horas",
+        "Fast for 10 hours.",
         "Fast for 12 hours",
         "Rest for 24 hours",
         "The procedure takes about 3 hours",
@@ -630,7 +630,7 @@ def test_negation_and_office_hours_are_spoken(tmp_path: Path) -> None:
         "You can reschedule up to 2 hours before",
     )
     for phrase in phrases:
-        turn = LiveTurn("S2", "Qué horarios hay.")
+        turn = LiveTurn("S2", "What times are open?")
         transport = RecordingTransport([_stt(), _llm(phrase), _tts()])
         payload = run_live(
             _env(),
@@ -647,7 +647,7 @@ def test_negation_and_office_hours_are_spoken(tmp_path: Path) -> None:
 
 
 def test_calendar_tool_names_cover_hints_and_ignore_junk() -> None:
-    assert calendar_tool_called_in({"tool_calls": [{"function": {"name": "list_horarios"}}]})
+    assert calendar_tool_called_in({"tool_calls": [{"function": {"name": "list_schedules"}}]})
     assert calendar_tool_called_in({"tool_calls": [{"name": "check-availability"}]})
     assert calendar_tool_called_in(
         {"tool_calls": [{"function": {"name": "  "}, "name": "find_slots"}]}
@@ -659,37 +659,37 @@ def test_calendar_tool_names_cover_hints_and_ignore_junk() -> None:
 
 def test_offered_hours_without_a_tool_call_are_not_spoken(tmp_path: Path) -> None:
     phrases = (
-        "Te puedo ofrecer las 15 hs",
-        "Mañana a las 10 tenemos lugar",
-        "El lunes a las diez hay lugar",
-        "Podemos el jueves a las 3 de la tarde",
-        "Te puedo dar turno el 20 de octubre",
-        "Su cita está agendada para el martes",
-        "Tengo lugar el 22",
-        "Sí, ya te agendé",
+        "I can offer you 3 pm.",
+        "Tomorrow at 10:00 we have a slot.",
+        "Monday at 10:00 there is an opening.",
+        "We can do Thursday at 3 pm.",
+        "I can give you an appointment on October 20.",
+        "Your appointment is scheduled for Tuesday.",
+        "I have a slot on the 22nd.",
+        "Yes, I already booked you.",
         "I have an opening tomorrow at 3 pm",
         "We can book you Tuesday at 10am",
-        "Ese horario está libre, quedás anotado",
-        "El doctor te recibe pasado mañana temprano",
-        "Tenemos disponibilidad la semana próxima",
+        "That time is open, and you're booked for Tuesday.",
+        "The doctor will see you tomorrow morning.",
+        "There is availability next week.",
         "There's availability next Thursday",
         "I booked you in for the 5th at noon",
-        "Nos vemos el viernes 23",
-        "Tengo un hueco el jueves por la tarde",
-        "Sí, el miércoles tenemos cupo",
-        "Te puedo meter mañana a primera hora",
-        "Te confirmo el turno de las 10 y cuarto",
-        "El sábado a la mañana está libre",
+        "See you on Friday the 23rd.",
+        "I have an opening Thursday afternoon.",
+        "Yes, on Wednesday we have a slot.",
+        "I can fit you in tomorrow first thing.",
+        "I confirm your appointment at 10:15.",
+        "Saturday morning is open.",
         "We have an appointment open tomorrow morning",
         "Slots are available on the 12th, 13th and 14th",
         "I've scheduled you for next Wednesday at 4",
         "Next Tuesday afternoon is open if you'd like",
-        "quedaste con la Dra. López el viernes 6",
+        "You're booked with Dr. Lopez on Friday the 6th.",
         "We can see you tomorrow afternoon",
         "There's a free slot on Friday morning",
         "I've put you down for Wednesday at 9",
         "Our next opening is the 21st at half past two",
-        "Reservé tu cita de control para el sábado por la mañana",
+        "I've reserved your follow-up for Saturday morning.",
         "I can fit you in tomorrow around noon",
         "Your appointment is confirmed for November 5th",
         "I scheduled your check-up for Friday at 2",
@@ -701,7 +701,7 @@ def test_offered_hours_without_a_tool_call_are_not_spoken(tmp_path: Path) -> Non
         "Okay, Monday at 8 works, it's on the calendar now",
     )
     for phrase in phrases:
-        turn = LiveTurn("S2", "Qué horarios hay.")
+        turn = LiveTurn("S2", "What times are open?")
         transport = RecordingTransport([_stt(), _llm(phrase), _tts()])
         payload = run_live(
             _env(),
@@ -719,7 +719,7 @@ def test_offered_hours_without_a_tool_call_are_not_spoken(tmp_path: Path) -> Non
 
 
 def test_calendar_tool_call_backs_the_same_offer(tmp_path: Path) -> None:
-    phrase = "Te puedo ofrecer las 15 hs"
+    phrase = "I can offer you 3 pm."
     calls = [
         {
             "id": "call_1",
@@ -727,7 +727,7 @@ def test_calendar_tool_call_backs_the_same_offer(tmp_path: Path) -> None:
             "function": {"name": "find_slots", "arguments": "{}"},
         }
     ]
-    turn = LiveTurn("S2", "Qué horarios hay.")
+    turn = LiveTurn("S2", "What times are open?")
     transport = RecordingTransport([_stt(), _llm(phrase, tool_calls=calls), _tts()])
     payload = run_live(
         _env(),
@@ -747,9 +747,9 @@ def test_calendar_tool_call_backs_the_same_offer(tmp_path: Path) -> None:
 
 
 def test_unrelated_tool_call_does_not_back_an_offer(tmp_path: Path) -> None:
-    phrase = "Mañana a las 10 tenemos lugar"
+    phrase = "Tomorrow at 10:00 we have a slot."
     calls = [{"name": "transfer_to_desk"}]
-    turn = LiveTurn("S2", "Qué horarios hay.")
+    turn = LiveTurn("S2", "What times are open?")
     transport = RecordingTransport([_stt(), _llm(phrase, tool_calls=calls), _tts()])
     payload = run_live(
         _env(),
@@ -773,8 +773,8 @@ def test_usage_records_tokens_cached_estimate_and_provider_ticks(tmp_path: Path)
         "prompt_tokens_details": {"cached_tokens": 128},
         "cost_in_usd_ticks": 8555500,
     }
-    turn = LiveTurn("S1", "Quiero agendar un turno de consulta general.")
-    transport = RecordingTransport([_stt(), _llm("No puedo confirmar una reserva.", usage), _tts()])
+    turn = LiveTurn("S1", "I want to book a general consultation appointment.")
+    transport = RecordingTransport([_stt(), _llm("I can't confirm a booking.", usage), _tts()])
     payload = run_live(
         _env(LIVE_LLM_USD_PER_1K_CACHED_TOKENS="0.0002"),
         tmp_path,
@@ -821,8 +821,8 @@ def test_token_price_is_not_a_provider_bill(tmp_path: Path) -> None:
         "total_cost_usd": 1.25,
         "cost_in_usd_ticks": 0.00125,
     }
-    turn = LiveTurn("S1", "Quiero agendar un turno de consulta general.")
-    transport = RecordingTransport([_stt(), _llm("No puedo confirmar una reserva.", usage), _tts()])
+    turn = LiveTurn("S1", "I want to book a general consultation appointment.")
+    transport = RecordingTransport([_stt(), _llm("I can't confirm a booking.", usage), _tts()])
     payload = run_live(
         _env(),
         tmp_path,
@@ -857,11 +857,11 @@ def test_integer_tick_string_is_a_provider_bill_and_a_replayed_estimate_is_not(
         "cost_in_usd_ticks": "8555500",
         "provider_reported_usd": 9.99,
     }
-    turn = LiveTurn("S1", "Quiero agendar un turno de consulta general.")
+    turn = LiveTurn("S1", "I want to book a general consultation appointment.")
     payload = run_live(
         _env(),
         tmp_path,
-        transport=RecordingTransport([_stt(), _llm("Listo.", usage), _tts()]),
+        transport=RecordingTransport([_stt(), _llm("Done.", usage), _tts()]),
         sleeper=lambda _ms: None,
         turns=(turn,),
     )

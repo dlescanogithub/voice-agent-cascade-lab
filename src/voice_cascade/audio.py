@@ -11,7 +11,7 @@ from typing import Literal
 from voice_cascade.budget import NOISE_RMS, SILENCE_RMS, SPEECH_RMS
 
 FrameKind = Literal["speech", "silence", "noise"]
-WORD_RE = re.compile(r"[0-9A-Za-zÁÉÍÓÚÜÑáéíóúüñ']+")
+WORD_RE = re.compile(r"[0-9A-Za-z']+")
 
 
 @dataclass(frozen=True)

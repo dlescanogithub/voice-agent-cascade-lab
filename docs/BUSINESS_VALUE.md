@@ -2,7 +2,7 @@
 
 > **Important notice**
 >
-> - **Fictional customer.** "Fictional diagnostic-imaging network" is an **invented** company for this exercise. It does not represent any real customer or employer. The clinic in the repo, "Clínica Aurora", is fictional too.
+> - **Fictional customer.** "Fictional diagnostic-imaging network" is an **invented** company for this exercise. It does not represent any real customer or employer. The clinic in the repo, "Aurora Clinic", is fictional too.
 > - **Inspired by the AWS Business Value Realization (BVR) framework:** a value-realization plan, KPIs with a threshold per stage ("pit stops"), and confirmation by the customer. **It is not an official AWS template** (the official VRP template is not public) and **I do not hold the AWS BVR Competency**, which is awarded to AWS partner companies, not to individuals.
 > - Labels:
 >   - **[REPO]**: measured or configured in the repo, with the commit, version, and date the repo records.
@@ -104,7 +104,7 @@ The current SIMULATED cohort is this 100-call script, not the 49-call table abov
 
 ## 1. Business challenge [SYN]
 
-The fictional diagnostic-imaging network receives **20,000 calls per month** on its scheduling line, in Rioplatense Spanish [SYN]. **45%** are only book, list, or cancel [SYN]. Call-center staff spend time on that intent, and Monday peaks create a wait. When the scheduling system is slow, manual retries produce **about 30 duplicate appointments per month** [SYN], at about USD 20 each in empty-room time and rescheduling [SYN]. They want to automate that intent **without giving medical instructions** (for example, how to prepare for a study), without cutting the caller off during a pause, and without duplicating appointments.
+The fictional diagnostic-imaging network receives **20,000 calls per month** on its scheduling line, in English [SYN]. **45%** are only book, list, or cancel [SYN]. Call-center staff spend time on that intent, and Monday peaks create a wait. When the scheduling system is slow, manual retries produce **about 30 duplicate appointments per month** [SYN], at about USD 20 each in empty-room time and rescheduling [SYN]. They want to automate that intent **without giving medical instructions** (for example, how to prepare for a study), without cutting the caller off during a pause, and without duplicating appointments.
 
 The repo's own [EST] sketch in [BUSINESS_CASE.md](BUSINESS_CASE.md) is a different volume: 8,000 scheduling calls per month and a 40% slice. Do not mix the two.
 
@@ -177,7 +177,7 @@ That split is the ownership table in [RUNBOOK.md](RUNBOOK.md) [REPO]. The sponso
 | Item | USD/year |
 | --- | ---: |
 | Integration: telephony, scheduling-system adapter, shadow (initial investment) | 30,000 |
-| Spanish golden set with consented real audio (initial investment) | 4,000 |
+| English golden set with consented real audio (initial investment) | 4,000 |
 | Maintenance (10 h/month × USD 50) | 6,000 |
 | Voice stack + telephony (9,000 × 3 min × 0.06 × 12) | 19,440 |
 | False barge-in recovery (0.02 × 9,000 × 1 min × 0.40 × 12) | 864 |
@@ -221,5 +221,5 @@ These were open questions about the README at that commit. This docs change reco
 3. **Python version for the 0.2.0 SIMULATED report.** [voice/SIMULATED_LATENCY.md](voice/SIMULATED_LATENCY.md) now records commit `bdd841a88dd516407913493efa9b07fc4eaa0ea6` and Python 3.12.3. Regeneration matched the existing tables. The 0.1.9 publication still has no Python version.
 4. **README live p95 rounding is real.** Stored `p95_ms` values are 281.45000000000005, 1145.3000000000002, 1253.6000000000004, and 2587.7000000000007. The README shows 281.5, 1145.3, 1253.6, and 2587.7, and now says those cells are rounded to 0.1 ms.
 5. **`docs/design/COST_ESTIMATE.md`** no longer says "private". The status line is "Draft v1".
-6. **Tests.** Local `python3 -m pytest` with the repo addopts, Python 3.12.3, package 0.2.1: 105 passed, total coverage 92.97%. The suite is unchanged from `bdd841a`. The same command is recorded in the README.
+6. **Tests.** At the 0.2.1 docs check, local `python3 -m pytest` with the repo addopts, Python 3.12.3, package 0.2.1: 105 passed, total coverage 92.97%. That suite still matched `bdd841a`. After the English rewrite, the same command on Python 3.12.3: 105 passed, total coverage 92.95%. Both runs are recorded in the README.
 7. **Budget comparison, confirmed from the artifacts.** Live end-to-end p95 2587.7000000000007 ms (`84cfb1a`, n=20) is above the lab 2500 ms budget. Live TTS first-byte p95 380.05 ms is above the 250 ms TTS TTFB budget. Live end-to-end is full audio; the lab end-to-end budget is first byte. The live run's published failure is `unsupported_availability_claim:S15`, and the live command returns 1 when `invariants.passed` is false. Live mode does not gate on `StageBudget`.

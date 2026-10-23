@@ -6,7 +6,7 @@ Accepted. 2026-10-17.
 
 ## Context
 
-Clínica Aurora schedules. A caller who describes a symptom must not receive a dose, a drug name, or a diagnosis from the assistant. A cassette can be edited later by mistake. A prompt-only rule will not hold once a real model is swapped in.
+Aurora Clinic schedules. A caller who describes a symptom must not receive a dose, a drug name, or a diagnosis from the assistant. A cassette can be edited later by mistake. A prompt-only rule will not hold once a real model is swapped in.
 
 ## Decision
 

@@ -32,7 +32,7 @@ Keys stay in the environment. They are not in these files and they are not print
 
 The repo's live client posts JSON to `LIVE_STT_URL` and an ElevenLabs-style synthesis URL. Those two shapes are not the xAI speech API. A temporary adapter outside the repo rewrote them to `POST /v1/stt` (multipart, pre-synthesized caller audio) and `POST /v1/tts`, and left `POST /v1/chat/completions` unchanged. The repo clock still timed each call. This repo does not include that adapter.
 
-Caller audio was synthesized with TTS, in Spanish. It was not a human voice.
+Caller audio was synthesized with TTS in Spanish on 2026-10-17 (original measurement data). It was not a human voice. The latency, `audio_s`, and `chars` figures below are from that run and were not re-measured. Transcript and utterance strings in the adapter log are English translations of those turns. Do not recompute `chars` from the translated text.
 
 ## Numbers from the files
 

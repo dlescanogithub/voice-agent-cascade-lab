@@ -1,60 +1,60 @@
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Quiero agendar un turno de consulta general.", "utterance": "Quiero agendar un turno de consulta general."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "I want to book a general consultation appointment.", "utterance": "I want to book a general consultation appointment."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1674500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 177, "audio_bytes": 169728}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "¿Qué horarios hay disponibles para consulta general?", "utterance": "Qué horarios hay disponibles para consulta general."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "What times are available for a general consultation?", "utterance": "What times are available for a general consultation."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1562000}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 168, "audio_bytes": 159360}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Me duele la cabeza, ¿qué medicamento tomo?", "utterance": "Me duele la cabeza, qué medicamento tomo."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "My head hurts, what medicine should I take?", "utterance": "My head hurts, what medicine should I take."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 2749500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 387, "audio_bytes": 374400}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "Necesito cancelar mi turno de mañana.", "utterance": "Necesito cancelar mi turno de mañana."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "I need to cancel my appointment for tomorrow.", "utterance": "I need to cancel my appointment for tomorrow."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1999500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 231, "audio_bytes": 226176}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "¿Tienen lugar para el viernes?", "utterance": "¿Tienen lugar para el viernes?"}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "Do you have a slot on Friday?", "utterance": "Do you have a slot on Friday?"}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1762000}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 214, "audio_bytes": 195456}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "Quiero cambiar mi turno para la semana que viene.", "utterance": "Quiero cambiar mi turno para la semana que viene."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "I want to move my appointment to next week.", "utterance": "I want to move my appointment to next week."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 2287000}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 272, "audio_bytes": 261888}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "Buenas, quiero reservar una consulta.", "utterance": "Buenas, quiero reservar una consulta."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "Hi, I want to book a consultation.", "utterance": "Hi, I want to book a consultation."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1549500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 149, "audio_bytes": 144000}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "¿A qué hora atienden los sábados?", "utterance": "¿A qué hora atienden los sábados?"}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "What time are you open on Saturdays?", "utterance": "What time are you open on Saturdays?"}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1174500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 77, "audio_bytes": 72576}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "Cancélame el turno, por favor.", "utterance": "Cancelame el turno, por favor."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "Please cancel the appointment for me.", "utterance": "Cancel the appointment for me, please."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 2818500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 151, "audio_bytes": 144000}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "¿Me puedo anotar para el lunes a la tarde?", "utterance": "Me puedo anotar para el lunes a la tarde."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "Can I book Monday afternoon?", "utterance": "Can I book for Monday afternoon."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1637000}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 179, "audio_bytes": 169728}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "Tengo fiebre, ¿qué tomo?", "utterance": "Tengo fiebre, ¿qué tomo?"}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.968, "match": true, "transcript": "I have a fever, what should I take?", "utterance": "I have a fever, what should I take?"}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1912000}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 200, "audio_bytes": 200448}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.656, "match": true, "transcript": "¿Hay turnos libres hoy?", "utterance": "¿Hay turnos libres hoy?"}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 1.656, "match": true, "transcript": "Are there open appointments today?", "utterance": "Are there open appointments today?"}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1574500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 173, "audio_bytes": 159360}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Quiero un turno con el doctor para esta semana.", "utterance": "Quiero un turno con el doctor para esta semana."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "I want an appointment with the doctor this week.", "utterance": "I want an appointment with the doctor this week."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1837000}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 214, "audio_bytes": 195456}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Anótame para consulta general el martes.", "utterance": "Anotame para consulta general el martes."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Book me for a general consultation on Tuesday.", "utterance": "Book me for a general consultation on Tuesday."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1699500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 160, "audio_bytes": 149376}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "No puedo ir al turno, lo quiero cancelar.", "utterance": "No puedo ir al turno, lo quiero cancelar."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.616, "match": true, "transcript": "I can't make the appointment, I want to cancel it.", "utterance": "I can't make the appointment, I want to cancel it."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1974500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 55, "audio_bytes": 57216}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "¿Cuánto dura una consulta general?", "utterance": "¿Cuánto dura una consulta general?"}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "How long does a general consultation take?", "utterance": "How long does a general consultation take?"}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1612000}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 179, "audio_bytes": 174720}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "Necesito reprogramar mi consulta.", "utterance": "Necesito reprogramar mi consulta."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "I need to reschedule my consultation.", "utterance": "I need to reschedule my consultation."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 2024500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 249, "audio_bytes": 256896}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "Quiero saber si hay lugar el jueves por la mañana.", "utterance": "Quiero saber si hay lugar el jueves por la mañana."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.928, "match": true, "transcript": "I want to know if there is a slot on Thursday morning.", "utterance": "I want to know if there is a slot on Thursday morning."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1699500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 188, "audio_bytes": 169728}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "¿Me confirmás el turno que pedí?", "utterance": "¿Me confirmás el turno que pedí?"}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "Can you confirm the appointment I asked for?", "utterance": "Can you confirm the appointment I asked for?"}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1787000}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 197, "audio_bytes": 200448}
-{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "Hola, quiero sacar un turno.", "utterance": "Hola, quiero sacar un turno."}
+{"stage": "stt", "url": "https://api.x.ai/v1/stt", "status": 200, "audio_s": 2.28, "match": true, "transcript": "Hello, I want to book an appointment.", "utterance": "Hello, I want to book an appointment."}
 {"stage": "llm", "url": "https://api.x.ai/v1/chat/completions", "status": 200, "ticks": 1349500}
 {"stage": "tts", "url": "https://api.x.ai/v1/tts", "status": 200, "chars": 122, "audio_bytes": 113280}

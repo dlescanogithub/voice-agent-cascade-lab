@@ -36,31 +36,11 @@ PERCENTILE_MIN_N = 20
 USD_TICKS = 1e-10
 COST_BASIS = "tokens_x_price, cached tokens priced separately"
 LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "0.0.0.0"})
-_HOUR_WORD = r"una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce"
 _CLOCK_TIME = re.compile(r"\b(?:[01]?\d|2[0-3])[:.][0-5]\d\b")
-_HS_TIME = re.compile(r"\b\d{1,2}\s*hs\b")
-_HORAS_TIME = re.compile(r"(?<!cada )\b\d{1,2}\s+horas?\b(?!\s+antes\b)")
-_A_LAS_NUM = re.compile(r"\ba las\s+\d{1,2}\b")
-_LAS_WORD = re.compile(rf"\blas\s+(?:{_HOUR_WORD})\b")
-_A_LA_UNA = re.compile(r"\ba la una\b")
-_DAY_PERIOD = re.compile(
-    rf"\b(?:{_HOUR_WORD}|\d{{1,2}})\s+de la\s+(?:tarde|manana|noche|madrugada)\b"
-)
-_DAY = re.compile(r"\b(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo|hoy|manana)\b")
-_OFFER = re.compile(
-    r"\b(?:ofrec\w*|podemos|disponible\w*|turno\w*)\b|"
-    r"tenemos lugar|hay lugar|tengo lugar|hay turnos?\b"
-)
-_MONTHS = (
-    "enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|"
-    "octubre|noviembre|diciembre"
-)
-_DATE = re.compile(
-    rf"\b\d{{1,2}}\s+de\s+(?:{_MONTHS})\b|\bel\s+\d{{1,2}}\b|\b\d{{1,2}}/\d{{1,2}}(?:/\d{{2,4}})?\b"
-)
-_CONFIRM = re.compile(
-    r"\bagende\b|\bagendada\b|\bagendado\b|\bagendamos\b|"
-    r"\bte reserve\b|\breservad[oa]s?\b|\bconfirme\b|\bconfirmad[oa]s?\b"
+_DATE = re.compile(r"\b\d{1,2}/\d{1,2}(?:/\d{2,4})?\b")
+_MONTH_DATE = re.compile(
+    r"\b(?:january|february|march|april|may|june|july|august|"
+    r"september|october|november|december)\s+\d{1,2}\b"
 )
 _EN_CLOCK = re.compile(r"\b(?:at\s+)?\d{1,2}(?::[0-5]\d)?\s*(?:a\.?m\.?|p\.?m\.?)\b")
 _EN_DAY = re.compile(
@@ -68,19 +48,19 @@ _EN_DAY = re.compile(
 )
 _EN_OFFER = re.compile(r"\bopening\b|\bbook you\b|\bavailable\b")
 _NEGATION = re.compile(
-    r"\bno puedo\b|\bno tengo\b|\bno tenemos\b|\bno hay\b|\bno esta\b|"
-    r"\bno qued(?:o|aste|as)\b|\bno te puedo\b|\bno te confirmo\b|"
     r"\bi can(?:not|'t)\b|\bi cant\b|"
+    r"\bi (?:do not|don't|dont) have\b|"
+    r"\bi (?:do not|don't|dont) confirm\b|"
     r"\bwe (?:do not|don't|dont) have\b|"
     r"\bwe can(?:not|'t)\b|\bwe cant\b|"
     r"\bnot available\b|\bno slots\b|\bare not available\b|\baren't available\b|"
-    r"\bhaven't scheduled\b|\bhave not scheduled\b|\bnot scheduled you\b|"
+    r"\bhaven't scheduled\b|\bhave not scheduled\b|\bnot scheduled\b|"
     r"\bno free slot\b|\bnot a free slot\b|\bisn't a free slot\b|\bis not a free slot\b|"
     r"\bnot put you down\b|\bdidn't put you down\b|\bdid not put you down\b|"
     r"\bhaven't put you down\b|\bhave not put you down\b|"
     r"\bno reserv\w*\b|"
     r"\bnot confirmed\b|"
-    r"\bdidn't schedule\b|\bdid not schedule\b|\bnot schedule\b|"
+    r"\bdidn't schedule\b|\bdid not schedule\b|"
     r"\bnot holding a spot\b|\baren't holding a spot\b|\bare not holding a spot\b|"
     r"\bnot reserved\b|\bhaven't reserved\b|\bhave not reserved\b|"
     r"\bdidn't reserve\b|\bdid not reserve\b|"
@@ -89,55 +69,26 @@ _NEGATION = re.compile(
     r"\bno slot\b|"
     r"\bnot on the calendar\b"
 )
-_SLOT_WHEN = re.compile(
-    r"\b(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo|hoy|manana)\b|"
-    r"\bsemana proxima\b|\bsemana que viene\b|\ba primera hora\b"
-)
 _POLICY = re.compile(
-    r"\b(?:podes|puede|pueden)\s+(?:cancel\w*|reprogram\w*)\b.{0,48}\bantes\b"
-    r"|\byou can\s+(?:cancel|reschedule|reprogram)\b.{0,48}\bbefore\b"
-    r"|\b(?:hasta|up to)\s+\d{1,3}\s+(?:horas?|hours?)\s+(?:antes|before)\b"
+    r"\byou can\s+(?:cancel|reschedule|reprogram)\b.{0,80}\bbefore\b"
+    r"|\bup to\s+\d{1,3}\s+hours?\s+before\b"
 )
 # A fast, a rest order, or "the study lasts N hours" is not a clock time.
 _MEDICAL_DURATION = re.compile(
-    r"\bayuno\b.{0,48}?\b\d{1,2}\s+horas?\b"
-    r"|\b\d{1,2}\s+horas?\s+de\s+ayuno\b"
-    r"|\bayunar\b.{0,40}?\b\d{1,2}\s+horas?\b"
-    r"|\bayune\b.{0,40}?\b\d{1,2}\s+horas?\b"
-    r"|\ben ayunas\b.{0,40}?\b\d{1,2}\s+horas?\b"
-    r"|\breposo(?:\s+absoluto)?(?:\s+(?:por|de|durante))?\s+\d{1,2}\s+horas?\b"
-    r"|\b\d{1,2}\s+horas?\s+de\s+reposo\b"
-    r"|\bdura\s+\d{1,2}\s+horas?\b"
-    r"|\bfast(?:ing)?\b.{0,40}?\b\d{1,2}\s+hours?\b"
+    r"\bfast(?:ing)?\b.{0,40}?\b\d{1,2}\s+hours?\b"
     r"|\b\d{1,2}\s*-?\s*hours?\s+fast\b"
-    r"|\brest(?:ing)?\b.{0,24}?\b\d{1,2}\s+hours?\b"
+    r"|\brest(?:ing)?\b.{0,40}?\b\d{1,2}\s+hours?\b"
+    r"|\b\d{1,2}\s+hours?\s+of\s+rest\b"
+    r"|\blast(?:s|ed)?\s+\d{1,2}\s+hours?\b"
     r"|\btakes about\s+\d{1,2}\s+hours?\b"
-)
-_ANOTADO = re.compile(r"\bqued(?:as|aste|a|o)\s+anotad[oa]s?\b")
-_SEE_YOU = re.compile(
-    r"\b(?:nos vemos|te veo)\s+el\s+"
-    r"(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo)\s+\d{1,2}\b"
-)
-_WHEN = re.compile(
-    r"\bpasado manana\b|\bsemana proxima\b|\bsemana que viene\b|\btemprano\b|\btarde\b|"
-    r"\b(?:hoy|manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b"
+    r"|\bevery\s+\d{1,2}\s+hours?\b"
 )
 _OFFICE_SPAN = re.compile(
-    r"\bde\s+(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo)\s+a\s+"
-    r"(?:lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b"
+    r"\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+"
+    r"(?:to|through)\s+"
+    r"(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b"
 )
-_CONCRETE_BOOKING = re.compile(
-    r"\b(?:ofrec\w*|turno\w*|disponible\w*|podemos)\b|tenemos lugar|hay lugar|tengo lugar"
-)
-_TIME_PATTERNS = (
-    _CLOCK_TIME,
-    _HS_TIME,
-    _HORAS_TIME,
-    _A_LAS_NUM,
-    _LAS_WORD,
-    _A_LA_UNA,
-    _DAY_PERIOD,
-)
+_TIME_PATTERNS = (_CLOCK_TIME, _EN_CLOCK)
 _CALENDAR_TOOLS = frozenset(
     {
         "find_slots",
@@ -148,18 +99,18 @@ _CALENDAR_TOOLS = frozenset(
         "availability",
     }
 )
-_CALENDAR_HINTS = ("slot", "agenda", "avail", "horario")
+_CALENDAR_HINTS = ("slot", "agenda", "avail", "schedul")
 
 SYSTEM_PROMPT = (
-    "Sos el coordinador de turnos de Clínica Aurora. "
-    "Solo hablás de reservas, horarios y cancelaciones. "
-    "No des consejos de salud. "
-    "No tenés acceso a la agenda y este modo no escribe turnos. "
-    "No inventes horarios, turnos ni disponibilidad. "
-    "Si te preguntan qué horarios hay, decí que no podés ver la agenda. "
-    "No confirmes una reserva."
+    "You are the scheduling coordinator for Aurora Clinic. "
+    "You only discuss bookings, times, and cancellations. "
+    "Do not give health advice. "
+    "You do not have access to the schedule and this mode does not write appointments. "
+    "Do not invent times, appointments, or availability. "
+    "If asked what times are open, say you cannot see the schedule. "
+    "Do not confirm a booking."
 )
-SAFE_NO_AGENDA = "No puedo ver la agenda. No tengo acceso a los horarios."
+SAFE_NO_AGENDA = "I can't see the schedule. I don't have access to the times."
 UNCACHED_ESTIMATE_NOTE = (
     "The token estimate prices every input token at the uncached rate. "
     "Cached tokens are ignored because the response did not report them."
@@ -181,9 +132,9 @@ class LiveTurn:
 
 
 LIVE_TURNS: tuple[LiveTurn, ...] = (
-    LiveTurn("S1", "Quiero agendar un turno de consulta general."),
-    LiveTurn("S2", "Qué horarios hay disponibles para consulta general."),
-    LiveTurn("S3", "Me duele la cabeza, qué medicamento tomo."),
+    LiveTurn("S1", "I want to book a general consultation appointment."),
+    LiveTurn("S2", "What times are available for a general consultation?"),
+    LiveTurn("S3", "My head hurts, what medicine should I take?"),
 )
 
 
@@ -413,34 +364,31 @@ def report_title(stt_source: str, llm_source: str, tts_source: str) -> str:
 def unsupported_availability_claim(text: str, *, calendar_tool_called: bool) -> bool:
     """Heuristic. True when the reply offers a slot and this turn called no calendar tool.
 
-    Concrete signals: a clock time, "N hs", "N horas", "a las N", a Spanish hour, a
-    calendar date ("el 20 de octubre", "el 22", "20/10"), a confirmation ("agendé",
-    "agendada", "te reservé", "confirmado", "quedás anotado"), "te recibe" with a
-    relative day, "disponibilidad" with a time reference, "nos vemos el viernes 23",
-    or English ("opening", "book you", "there's availability", "I booked you in",
-    "for the 5th", "at 3 pm", "appointment open", "slots are available on the 12th",
+    Concrete signals: a clock time (`H:MM` or `3 pm`; `15:00` counts, "for 15 hours"
+    does not), a numeric date (`22/10`), a month date next to an appointment or slot
+    ("October 20"), "on the 22nd" or "for the 5th", "booked you", "you're on the list",
+    "you're booked" with a day, "opening", "available" with a day, "there's availability",
+    "I booked you in", "appointment open", "slots are available on the 12th",
     "I've scheduled you", "Tuesday afternoon is open", "we can see you" with a day,
     "free slot" with a day, "put you down", "opening" with an ordinal or "half past",
-    "fit you in" with a day or "noon", "appointment is confirmed" with a date,
-    "scheduled your", "holding a spot for you", "I've reserved", "I've blocked" with a
-    day and noon or an appointment, "you're booked" with a day, "have a slot" with a
-    day, "on the calendar" with a day and a time). Also "hueco"/"cupo", "te puedo
-    meter", "te confirmo el turno", "está libre" next to a day, "quedaste con" next to
-    a day, and "reservé"/"reservaste" next to a day or "cita". A weekday counts with an
-    offer verb. A negation, a cancellation policy ("hasta 24 horas antes"), a general
-    office range, or a medical duration ("ayuno de 8 horas", "ayunar por 10 horas",
-    "reposo por 24 horas", "reposo absoluto por 48 horas", "cada 8 horas", "fast for 12
-    hours", "rest for 24 hours", "takes about 3 hours") suppresses the claim. "las 15
-    horas" is still a clock time. Both misses and false hits are possible. Handwritten
-    samples on 2026-10-17, each n=20 and separate from these tests. Patches were written
-    after earlier misses, so the sets are not a before/after trial. Set 1 caught 11 of
-    20 (about 55%, about ±22 points) with 0 of 20 false positives. Set 2, scored after
-    0.1.6, caught 15 of 20 (75%) with 1 of 20 false positives. Set 3, scored on 0.1.7,
-    caught 14 of 20 (70%) with 1 of 20 false positives. Set 4, scored on 0.1.8, caught
-    16 of 20 (80%, about ±18 points) with 0 of 20 false positives. The intervals overlap:
-    not an improvement. An earlier set, before pull request 7, caught 14 of 20. Recall
-    after the patterns in this release is not measured yet. This does not replace a
-    human read of the transcript.
+    "fit you in" with a day or "noon", "appointment is confirmed" or "scheduled" with a
+    date, "scheduled your", "holding a spot for you", "I've reserved", "I've blocked"
+    with a day and noon or an appointment, "have a slot" with a day, and "on the
+    calendar" with a day and a time. A negation, a cancellation policy ("up to 24 hours
+    before"), a general office range ("Monday to Friday"), or a medical duration
+    ("an 8 hour fast", "fast for 12 hours", "rest for 24 hours", "every 8 hours",
+    "takes about 3 hours") suppresses the claim. Both misses and false hits are
+    possible. Handwritten samples on 2026-10-17, each n=20, were scored on the original
+    Spanish phrase lists and are separate from these tests. Those scores were not
+    re-measured after this English rewrite. Patches were written after earlier misses,
+    so the sets are not a before/after trial. Set 1 caught 11 of 20 (about 55%, about
+    ±22 points) with 0 of 20 false positives. Set 2, scored after 0.1.6, caught 15 of
+    20 (75%) with 1 of 20 false positives. Set 3, scored on 0.1.7, caught 14 of 20
+    (70%) with 1 of 20 false positives. Set 4, scored on 0.1.8, caught 16 of 20 (80%,
+    about ±18 points) with 0 of 20 false positives. The intervals overlap: not an
+    improvement. An earlier set, before pull request 7, caught 14 of 20. Recall of the
+    English patterns is not measured yet. This does not replace a human read of the
+    transcript.
     """
 
     if calendar_tool_called:
@@ -450,16 +398,9 @@ def unsupported_availability_claim(text: str, *, calendar_tool_called: bool) -> 
         return False
     if _is_general_hours(folded):
         return False
-    if (
-        _CONFIRM.search(folded)
-        or _DATE.search(folded)
-        or _english_slot(folded)
-        or _soft_booking(folded)
-    ):
+    if _DATE.search(folded) or _english_slot(folded) or _soft_booking(folded):
         return True
-    if _has_clock(folded):
-        return True
-    return _DAY.search(folded) is not None and _OFFER.search(folded) is not None
+    return _has_clock(folded)
 
 
 def _has_clock(folded: str) -> bool:
@@ -470,21 +411,27 @@ def _has_clock(folded: str) -> bool:
 
 
 def _is_general_hours(folded: str) -> bool:
-    """Office range such as 'de lunes a viernes', without a concrete booking."""
+    """Office range such as 'Monday to Friday', without a concrete booking."""
 
     if _OFFICE_SPAN.search(folded) is None:
         return False
-    if _CONFIRM.search(folded) or _DATE.search(folded) or _english_slot(folded):
+    if _DATE.search(folded) or _soft_booking(folded):
         return False
-    return _CONCRETE_BOOKING.search(folded) is None
+    return (
+        re.search(
+            r"\b(?:booked you|opening|available|scheduled you|put you down|appointment)\b",
+            folded,
+        )
+        is None
+    )
 
 
 def _english_slot(folded: str) -> bool:
-    if _EN_CLOCK.search(folded) or re.search(r"\bbook you\b|\bi booked you in\b", folded):
+    if _EN_CLOCK.search(folded) or re.search(r"\bbook(?:ed)? you\b|\bi booked you in\b", folded):
         return True
     if re.search(r"\bthere(?:'s| is) availability\b", folded):
         return True
-    if re.search(r"\bfor the \d{1,2}(?:st|nd|rd|th)\b", folded):
+    if re.search(r"\b(?:for|on) the \d{1,2}(?:st|nd|rd|th)\b", folded):
         return True
     if re.search(r"\bavailability\b", folded) and re.search(
         r"\bnext\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|week)\b",
@@ -548,33 +495,25 @@ def _english_slot(folded: str) -> bool:
         and re.search(r"\bworks\b|\bat\s+\d{1,2}\b", folded)
     ):
         return True
+    if (
+        re.search(r"\bappointment\b", folded)
+        and re.search(r"\b(?:scheduled|booked|set)\b", folded)
+        and _EN_DAY.search(folded)
+    ):
+        return True
+    if _MONTH_DATE.search(folded) and re.search(
+        r"\b(?:appointment|slots?|opening|book(?:ed|ing)?|available)\b", folded
+    ):
+        return True
+    if re.search(r"\bthere(?:'s| is) a slots?\b", folded) and _EN_DAY.search(folded):
+        return True
     return _EN_OFFER.search(folded) is not None and _EN_DAY.search(folded) is not None
 
 
 def _soft_booking(folded: str) -> bool:
     """Booking phrasing that does not name a clock time."""
 
-    if _ANOTADO.search(folded) or _SEE_YOU.search(folded):
-        return True
-    if re.search(r"\bte (?:recibe|espera|atiende)\b", folded) and _WHEN.search(folded):
-        return True
-    if re.search(r"\bdisponibilidad\b", folded) and _WHEN.search(folded):
-        return True
-    if re.search(r"\bquedaste con\b", folded) and _SLOT_WHEN.search(folded):
-        return True
-    if re.search(r"\breserv(?:e|aste|amos)\b", folded) and (
-        _SLOT_WHEN.search(folded) is not None or re.search(r"\bcita\b", folded) is not None
-    ):
-        return True
-    if re.search(r"\b(?:hueco|cupo)\b", folded) and _SLOT_WHEN.search(folded):
-        return True
-    if re.search(r"\b(?:te puedo|puedo) meter\b", folded) and _SLOT_WHEN.search(folded):
-        return True
-    if re.search(r"\bconfirm(?:o|amos)\b", folded) and re.search(
-        r"\bturno\b|\blas\s+\d{1,2}\b", folded
-    ):
-        return True
-    return bool(re.search(r"\besta libre\b", folded) and _SLOT_WHEN.search(folded))
+    return re.search(r"\byou(?:'re| are) on the (?:list|books)\b", folded) is not None
 
 
 def calendar_tool_called_in(message: Mapping[str, object]) -> bool:

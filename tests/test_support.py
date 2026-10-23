@@ -62,10 +62,10 @@ def test_redaction_and_json_logs() -> None:
 
     reset_denylist()
     add_sensitive(["Vera Lumen", "+5491100000099"])
-    assert "[REDACTED_NAME]" in redact_text("soy Vera Lumen")
-    assert "[REDACTED_PHONE]" in redact_text("llame al +5491100000099 por favor")
+    assert "[REDACTED_NAME]" in redact_text("this is Vera Lumen")
+    assert "[REDACTED_PHONE]" in redact_text("call +5491100000099 please")
     assert "[REDACTED_EMAIL]" in redact_text("mail vera.lumen@example.com")
-    assert "2026-11-03" in redact_text("fecha 2026-11-03")
+    assert "2026-11-03" in redact_text("date 2026-11-03")
     logger = logging.getLogger("voice_cascade.pii_test")
     logger.handlers.clear()
     logger.propagate = False
@@ -74,8 +74,8 @@ def test_redaction_and_json_logs() -> None:
     log_event(
         logger,
         "turn_complete",
-        "turno de Vera Lumen",
-        {"phone": "+5491100000099", "patient_name": "Vera Lumen", "transcript": "soy Vera"},
+        "appointment for Vera Lumen",
+        {"phone": "+5491100000099", "patient_name": "Vera Lumen", "transcript": "this is Vera"},
     )
     captured = "\n".join(handler.lines)
     assert "Vera" not in captured
@@ -88,7 +88,7 @@ def test_trace_roundtrip(tmp_path: Path) -> None:
     reset_denylist()
     add_sensitive(["Ciro Pampero"])
     path = tmp_path / "nested" / "trace.jsonl"
-    append_trace(path, {"patient_name": "Ciro Pampero", "note": "hola Ciro"})
+    append_trace(path, {"patient_name": "Ciro Pampero", "note": "hello Ciro"})
     rows = read_traces(path)
     assert rows[0]["patient_name"] == "[REDACTED]"
     assert "Ciro" not in str(rows[0]["note"])

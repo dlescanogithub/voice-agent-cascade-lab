@@ -13,7 +13,7 @@ from voice_cascade.synth_audio import SynthClip
 from voice_cascade.turn_machine import TurnMachine, TurnProfile
 from voice_cascade.vad_backend import EnergyVadBackend
 
-ASSISTANT_TEXT = "Listo. La reserva queda pendiente de confirmacion del sistema."
+ASSISTANT_TEXT = "Done. The booking is waiting for the system to confirm."
 PLAYBACK_MS = 640
 
 

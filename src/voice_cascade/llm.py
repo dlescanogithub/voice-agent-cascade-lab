@@ -13,28 +13,25 @@ from voice_cascade.stt import fold
 
 CASSETTE_PATH = Path(__file__).with_name("cassettes") / "clinic.json"
 SAFE_CLINICAL = (
-    "No puedo ayudar con una consulta de salud. "
-    "Te derivo con una persona del equipo de coordinación de turnos."
+    "I can't help with a health question. I'm transferring you to someone on the scheduling team."
 )
-SAFE_UNCLEAR = (
-    "No llegué a entender el pedido. "
-    "Te derivo con una persona del equipo de coordinación de turnos."
+SAFE_UNCLEAR = "I didn't catch the request. I'm transferring you to someone on the scheduling team."
+SAFE_SLOT = (
+    "That time is no longer open. I'm transferring you to the scheduling team to find another."
 )
-SAFE_SLOT = "Ese horario ya no está libre. Te derivo con coordinación de turnos para buscar otro."
 SAFE_DLQ = (
-    "No pude confirmar la gestión por un problema de sistema. "
-    "Te derivo con una persona. No se registró una reserva nueva."
+    "I couldn't confirm the request because of a system problem. "
+    "I'm transferring you to a person. No new booking was saved."
 )
 
 _ADVICE_PHRASES = (
-    "ibuprofeno",
-    "paracetamol",
-    "antibiotico",
-    "le receto",
-    "dosis",
-    "tome ",
-    "toma ",
-    "diagnostico probable",
+    "ibuprofen",
+    "acetaminophen",
+    "antibiotic",
+    "i prescribe",
+    "dose",
+    "take ",
+    "likely diagnosis",
 )
 
 
@@ -57,23 +54,24 @@ def contains_clinical_advice(text: str) -> bool:
 def classify(text: str) -> str:
     folded = fold(text)
     clinical_tokens = (
-        "duele",
-        "dolor",
-        "fiebre",
-        "fievre",
-        "medicament",
-        "sintoma",
-        "receta",
-        "dosis",
-        "diagn",
+        "hurt",
+        "pain",
+        "fever",
+        "fevor",
+        "medicine",
+        "medication",
+        "symptom",
+        "prescription",
+        "dose",
+        "diagnos",
     )
     if any(token in folded for token in clinical_tokens):
         return "clinical"
-    if any(token in folded for token in ("cancel", "cansel", "anular")):
+    if any(token in folded for token in ("cancel", "cansel")):
         return "cancel"
-    if any(token in folded for token in ("agend", "ajend", "reserv", "kiero", "quiero")):
+    if any(token in folded for token in ("book", "bok", "schedul", "reserv", "want")):
         return "book"
-    if any(token in folded for token in ("horario", "orario", "disponib")):
+    if any(token in folded for token in ("time", "hour", "availab", "opening")):
         return "find"
     return "unclear"
 

@@ -24,14 +24,14 @@ def test_clock_advances_and_rejects_negative() -> None:
 
 
 def test_scripted_pause_splits_after_two_tokens() -> None:
-    frames = scripted_utterance("Necesito cancelar el turno reservado", 300)
+    frames = scripted_utterance("I need to cancel the reserved appointment", 300)
     assert [frame.kind for frame in frames] == ["speech", "silence", "speech"]
-    assert frames[0].text == "Necesito cancelar"
+    assert frames[0].text == "I need"
     assert frames[1].duration_ms == 300
 
 
 def test_short_utterance_stays_one_frame() -> None:
-    frames = scripted_utterance("hola", 300)
+    frames = scripted_utterance("hello", 300)
     assert len(frames) == 1
 
 
@@ -67,12 +67,12 @@ def test_unknown_profile() -> None:
 
 
 def test_endpoint_profiles_on_internal_pause() -> None:
-    frames = scripted_utterance("Necesito cancelar el turno reservado soy Nube", 300)
+    frames = scripted_utterance("I need to cancel the reserved appointment this is Nube", 300)
     aggressive = endpoint(frames, get_profile("aggressive"))
     balanced = endpoint(frames, get_profile("balanced"))
     patient = endpoint(frames, get_profile("patient"))
     assert aggressive.premature is True
-    assert aggressive.words[:2] == ["Necesito", "cancelar"]
+    assert aggressive.words[:2] == ["I", "need"]
     assert balanced.premature is False
     assert "Nube" in balanced.words
     assert patient.premature is False
@@ -102,12 +102,12 @@ def test_activity_resets_on_silence_gap() -> None:
     from voice_cascade.audio import AudioFrame
 
     frames = [
-        AudioFrame("speech", 50, "hola", 0.8),
+        AudioFrame("speech", 50, "hello", 0.8),
         AudioFrame("silence", 50, "", 0.02),
-        AudioFrame("speech", 50, "chau", 0.8),
+        AudioFrame("speech", 50, "bye", 0.8),
     ]
     decision = detect_interrupt(frames, get_profile("aggressive"))
     assert decision.triggered is False
     heard = endpoint(frames, get_profile("aggressive"))
     assert heard.premature is False
-    assert heard.words == ["hola", "chau"]
+    assert heard.words == ["hello", "bye"]

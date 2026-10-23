@@ -24,7 +24,7 @@ from voice_cascade.clock import SimulatedClock
 from voice_cascade.config import Settings
 from voice_cascade.logging_setup import log_event
 
-SERVICE = "consulta_general"
+SERVICE = "general_consult"
 SIMULATED_UNIX_S = 1_700_000_000
 SIGNATURE_TOLERANCE_S = 300
 KEY_RE = re.compile(r"^[A-Za-z0-9:._-]{1,200}$")
